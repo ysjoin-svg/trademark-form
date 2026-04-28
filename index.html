@@ -12,7 +12,7 @@ header h1 { font-size:1.05rem; font-weight:600; }
 .container { display:flex; min-height:calc(100vh - 48px); }
 
 /* ── 左側表單 ── */
-.form-panel { width:380px; min-width:340px; background:#fff; padding:15px; overflow-y:auto; border-right:1px solid #ddd; }
+.form-panel { width:390px; min-width:350px; background:#fff; padding:15px; overflow-y:auto; border-right:1px solid #ddd; }
 .section-title { font-size:.7rem; font-weight:700; color:#1a3a5c; letter-spacing:1px; margin:15px 0 7px; border-bottom:2px solid #1a3a5c; padding-bottom:3px; }
 .section-title:first-child { margin-top:0; }
 label { display:block; font-size:.79rem; color:#555; margin:7px 0 2px; }
@@ -23,10 +23,16 @@ input[type=text], input[type=tel], input[type=number], textarea {
   font-size:.84rem; font-family:inherit; transition:border-color .2s;
 }
 input:focus, textarea:focus { outline:none; border-color:#1a3a5c; }
+input:disabled { background:#f0f0f0; color:#888; }
 textarea { resize:vertical; min-height:48px; }
 .radio-group, .checkbox-group { display:flex; flex-wrap:wrap; gap:4px 10px; margin-top:4px; }
 .radio-group label, .checkbox-group label { display:flex; align-items:center; gap:3px; font-size:.81rem; color:#333; margin:0; cursor:pointer; }
 input[type=radio], input[type=checkbox] { width:auto; }
+.sync-label { display:flex; align-items:center; gap:5px; font-size:.76rem; color:#1a3a5c; margin:4px 0 3px; cursor:pointer; }
+.sync-label input { width:auto; }
+.case-item { display:flex; gap:4px; margin-bottom:5px; align-items:center; }
+.case-item input { flex:1; }
+.case-item button { flex:none; padding:3px 7px; border:1px solid #ccc; border-radius:3px; cursor:pointer; background:#fff; font-size:.8rem; }
 .fee-row { display:grid; grid-template-columns:1fr 70px 70px; gap:5px; align-items:end; margin-top:4px; }
 .fee-row label { font-size:.75rem; }
 .fee-total-box { padding:5px 8px; background:#eef3f8; border:1px solid #b0c4d8; border-radius:3px; font-size:.82rem; color:#1a3a5c; font-weight:600; }
@@ -34,13 +40,13 @@ input[type=radio], input[type=checkbox] { width:auto; }
 .date-row { display:flex; gap:5px; }
 .date-row > div { flex:1; }
 .foreign-block { display:flex; flex-direction:column; gap:5px; margin-top:4px; }
-.foreign-item { display:grid; grid-template-columns:55px 1fr 60px 60px 24px; gap:4px; align-items:end; }
+.foreign-item { display:grid; grid-template-columns:55px 1fr 55px 60px 26px; gap:4px; align-items:end; }
 .foreign-item label { font-size:.72rem; }
 .foreign-total-box { padding:5px 4px; background:#eef3f8; border:1px solid #b0c4d8; border-radius:3px; font-size:.78rem; color:#1a3a5c; font-weight:600; text-align:center; }
 .add-btn { margin-top:4px; padding:3px 10px; font-size:.76rem; cursor:pointer; border:1px solid #aaa; border-radius:3px; background:#f8f8f8; font-family:inherit; }
 .btn-generate { width:100%; margin-top:16px; padding:10px; background:#1a3a5c; color:#fff; border:none; border-radius:4px; font-size:.9rem; font-family:inherit; cursor:pointer; font-weight:600; }
 .btn-generate:hover { background:#254e7a; }
-.toggle-label { display:flex; align-items:center; gap:6px; font-size:.82rem; color:#1a3a5c; font-weight:600; cursor:pointer; margin:10px 0 6px; }
+.toggle-label { display:flex; align-items:center; gap:6px; font-size:.82rem; color:#1a3a5c; font-weight:600; cursor:pointer; margin:12px 0 6px; }
 .sub-block { background:#f8f8f8; border:1px solid #e0e0e0; border-radius:4px; padding:10px; margin-top:4px; }
 
 /* ── 右側預覽 ── */
@@ -117,7 +123,8 @@ input[type=radio], input[type=checkbox] { width:auto; }
     <label><input type="radio" name="office" value="台北" onchange="onOfficeChange()"> 台北所（林家均）</label>
   </div>
 
-  <div class="section-title">申請人資料</div>
+  <!-- ═══ 委任人資料 ═══ -->
+  <div class="section-title">委任人資料</div>
   <label>姓名 / 公司名稱 <span class="req">＊</span></label>
   <input type="text" id="clientName" placeholder="例：王大明 / 某某有限公司">
   <label>代表人</label>
@@ -125,9 +132,13 @@ input[type=radio], input[type=checkbox] { width:auto; }
   <input type="text" id="representative" placeholder="選填">
   <label>統一編號 / 身分證字號 <span class="req">＊</span></label>
   <input type="text" id="idNo" placeholder="必填">
-  <label>地址 <span class="req">＊</span></label>
+  <label>申請地址 <span class="req">＊</span></label>
   <div class="hint">請填營業登記或身分證上的地址</div>
-  <input type="text" id="address" placeholder="例：高雄市左營區…">
+  <input type="text" id="regAddr" placeholder="例：高雄市左營區…" oninput="onRegAddrInput()">
+  <label>聯絡地址</label>
+  <div class="hint">郵寄地址</div>
+  <label class="sync-label"><input type="checkbox" id="contactSame" onchange="syncContact()"> 與申請地址相同</label>
+  <input type="text" id="contactAddr" placeholder="例：高雄市…">
   <label>行動電話</label>
   <input type="tel" id="mobile" placeholder="例：0912-345678">
   <label>電話</label>
@@ -135,9 +146,21 @@ input[type=radio], input[type=checkbox] { width:auto; }
   <label>傳真</label>
   <input type="tel" id="fax" placeholder="選填">
 
+  <!-- ═══ 案件資料 ═══ -->
   <div class="section-title">案件資料</div>
-  <label>案件名稱 <span class="req">＊</span></label>
-  <input type="text" id="caseName" placeholder="例：某某品牌">
+  <label>案件名稱 <span class="req">＊</span>（可新增多件）</label>
+  <div id="caseList">
+    <div class="case-item"><input type="text" placeholder="例：某某品牌"><button onclick="removeCase(this)" title="刪除">✕</button></div>
+  </div>
+  <button class="add-btn" onclick="addCase()">＋ 新增案件</button>
+
+  <label style="margin-top:8px">商標種類</label>
+  <div class="radio-group">
+    <label><input type="radio" name="markType" value="商標" checked> 商標</label>
+    <label><input type="radio" name="markType" value="團體標章"> 團體標章</label>
+    <label><input type="radio" name="markType" value="團體商標"> 團體商標</label>
+    <label><input type="radio" name="markType" value="證明標章"> 證明標章</label>
+  </div>
   <label>商標顏色</label>
   <div class="radio-group">
     <label><input type="radio" name="color" value="墨色" checked> 墨色</label>
@@ -176,7 +199,8 @@ input[type=radio], input[type=checkbox] { width:auto; }
     <input type="text" id="otherText" placeholder="請說明其他性質內容">
   </div>
 
-  <label class="toggle-label" style="margin-top:12px">
+  <!-- ═══ 商標申請人（與委任人不同） ═══ -->
+  <label class="toggle-label">
     <input type="checkbox" id="diffApp" onchange="toggleDiffApp()"> 商標申請人與委任人不同
   </label>
   <div id="diffAppBlock" class="sub-block hidden">
@@ -187,11 +211,16 @@ input[type=radio], input[type=checkbox] { width:auto; }
     <input type="text" id="appRep" placeholder="選填">
     <label>統一編號 / 身分證字號 <span class="req">＊</span></label>
     <input type="text" id="appId" placeholder="必填">
-    <label>地址 <span class="req">＊</span></label>
+    <label>申請地址 <span class="req">＊</span></label>
     <div class="hint">請填營業登記或身分證上的地址</div>
-    <input type="text" id="appAddr" placeholder="">
+    <input type="text" id="appRegAddr" placeholder="" oninput="onAppRegAddrInput()">
+    <label>聯絡地址</label>
+    <div class="hint">郵寄地址</div>
+    <label class="sync-label"><input type="checkbox" id="appContactSame" onchange="syncAppContact()"> 與申請地址相同</label>
+    <input type="text" id="appContactAddr" placeholder="">
   </div>
 
+  <!-- ═══ 費用 ═══ -->
   <div class="section-title">費用</div>
   <label>台灣費用</label>
   <div class="fee-row">
@@ -199,21 +228,18 @@ input[type=radio], input[type=checkbox] { width:auto; }
     <div><label>數量（件）</label><input type="number" id="twQty" value="1" min="1" oninput="calcFees()"></div>
     <div><label>總價</label><div class="fee-total-box" id="twTotal">7,000</div></div>
   </div>
-
   <label style="margin-top:8px">外國費用</label>
   <div class="foreign-block" id="foreignBlock"></div>
   <button class="add-btn" onclick="addForeignFee()">＋ 新增外國費用</button>
-
   <label style="margin-top:10px">前酬金（輸入數字）</label>
   <input type="number" id="feeAmount" placeholder="例：24000" min="0" oninput="updateFeeHint()">
   <div class="fee-hint" id="feeHint"></div>
-
   <label>後酬金</label>
   <input type="text" id="backFee" value="無" placeholder="例：無 / 壹萬元整">
-
   <label>經手人</label>
   <input type="text" id="handler" value="李宗穎">
 
+  <!-- ═══ 日期 ═══ -->
   <div class="section-title">日期</div>
   <div class="date-row">
     <div><label>民國年</label><input type="text" id="year"></div>
@@ -232,14 +258,14 @@ input[type=radio], input[type=checkbox] { width:auto; }
     <button class="print-btn" onclick="window.print()">列印 / 存 PDF</button>
   </div>
 
-  <!-- 委任書 -->
+  <!-- ── 委任書 ── -->
   <div id="tab-poa" class="doc-wrap">
     <div class="poa">
       <div class="poa-title">委　任　書</div>
       <div class="poa-body">茲委任下列受任人為特別授權之商標代理人，得單獨或共同代理：向商標主管機關辦理有關商標／服務標章／團體標章／證明標章／團體標章之申請、撤回、補正、移轉、分割、設定質權、延展、授權、變更、讓與、減縮商品或服務、拋棄商標權、繳納註冊費、發補書證、查閱、影印、發給各種證明文件等及其他有關事項之必要行為，核駁理由先行通知之陳述意見，異議、評定、廢止之提出及各該程序之答辯，以及申請舉行與出席聽證，訴願、行政訴訟之提出及撤回，代收上述程序有關之一切書證或物件，並有收受送達、捨棄、認諾、撤回及選任／解任複代理人之權，辦理商標法及其他法令所定關於商標一切程序之權，及代為保障本件權益之一切行為之權，並得隨時向主管機關申請減列或解任部分代理人。</div>
       <table class="poa-table">
         <tr><td class="lbl">委　任　人：</td><td><span class="fill" id="p-name">＿＿＿＿＿＿</span>（簽章）</td></tr>
-        <tr id="p-rep-row" style="display:none"><td class="lbl">代　表　人：</td><td><span class="fill" id="p-rep"></span></td></tr>
+        <tr id="p-rep-row"><td class="lbl">代　表　人：</td><td><span class="fill" id="p-rep">＿＿＿＿＿＿</span></td></tr>
         <tr><td class="lbl">地　　　址：</td><td><span class="fill" id="p-addr">＿＿＿＿＿＿＿＿＿＿</span></td></tr>
         <tr><td colspan="2" style="height:10pt"></td></tr>
         <tr><td class="lbl">受　任　人：</td><td><span class="fill" id="p-agent">李宗穎</span></td></tr>
@@ -253,7 +279,7 @@ input[type=radio], input[type=checkbox] { width:auto; }
     </div>
   </div>
 
-  <!-- 契約書 -->
+  <!-- ── 契約書 ── -->
   <div id="tab-contract" class="doc-wrap hidden">
     <div class="ct">
       <div class="ct-title">商標案件委任契約書</div>
@@ -263,12 +289,12 @@ input[type=radio], input[type=checkbox] { width:auto; }
         <span class="ct-art-title">第一條　委辦內容：</span>
         <div class="ct-item">一、案件名稱：<span class="fill" id="c-caseName">＿＿＿＿＿＿</span></div>
         <div class="ct-sub">商標顏色：<span class="fill" id="c-color">墨色</span>　　字體類型：<span class="fill" id="c-font">標準字體</span></div>
-        <div class="ct-item">二、類別：第　<span class="fill" id="c-cats">＿＿</span>　類　商標</div>
+        <div class="ct-item">二、類別：第　<span class="fill" id="c-cats">＿＿</span>　類　<span class="fill" id="c-markType">商標</span></div>
         <div id="c-goods-row" class="ct-sub" style="display:none">商品或服務名稱：<span class="fill" id="c-goods"></span></div>
         <div class="ct-item">三、案件性質：<span class="fill" id="c-types">＿＿＿＿</span></div>
         <div class="ct-item">四、申　請　人：<span class="fill" id="c-appName">＿＿＿＿＿＿</span></div>
         <div id="c-app-rep-row" class="ct-sub" style="display:none">代表人：<span class="fill" id="c-appRep"></span></div>
-        <div id="c-app-id-row" class="ct-sub" style="display:none">統一編號 / 身分證字號：<span class="fill" id="c-appId"></span></div>
+        <div id="c-app-id-row" class="ct-sub" style="display:none">統一編號：<span class="fill" id="c-appId"></span></div>
         <div class="ct-sub">申請地址：<span class="fill" id="c-appAddr">＿＿＿＿＿＿＿＿</span></div>
       </div>
 
@@ -303,11 +329,11 @@ input[type=radio], input[type=checkbox] { width:auto; }
           <div class="sign-row">經手人：<span class="fill" id="c-handler">李宗穎</span></div>
           <div class="sign-row">統一編號：<span class="fill" id="c-id"></span></div>
           <div class="sign-row">地　　址：高雄市左營區子華路116號2樓之3</div>
-          <div class="sign-row">聯絡地址：<span class="fill" id="c-addr">＿＿＿＿＿＿＿＿</span></div>
-          <div class="sign-row">台　北　所：臺北市中正區莒光路47號1樓</div>
-          <div class="sign-row">行動電話：<span class="fill" id="c-mobile"></span></div>
+          <div class="sign-row">申請地址：<span class="fill" id="c-regAddr">＿＿＿＿＿＿＿＿</span></div>
+          <div class="sign-row">台北所：臺北市中正區莒光路47號1樓</div>
+          <div class="sign-row">聯絡地址：<span class="fill" id="c-contactAddr">＿＿＿＿＿＿＿＿</span></div>
           <div class="sign-row">電　　話：(07)345-3388　傳　真：(07)345-2122</div>
-          <div class="sign-row">電　　話：<span class="fill" id="c-phone"></span>　傳　真：<span class="fill" id="c-fax"></span></div>
+          <div class="sign-row">行動電話：<span class="fill" id="c-mobile"></span>　電話：<span class="fill" id="c-phone"></span>　傳真：<span class="fill" id="c-fax"></span></div>
           <div class="sign-row"></div>
         </div>
         <div class="ct-date">中　華　民　國　<span class="fill" id="c-year">　　　</span>　年　<span class="fill" id="c-month">　　</span>　月　<span class="fill" id="c-day">　　</span>　日</div>
@@ -322,25 +348,56 @@ const AGENTS = {
   '高雄': { name:'李宗穎', regNo:'TT000087' },
   '台北': { name:'林家均', regNo:'TT000347' }
 };
-
 function g(id){ return document.getElementById(id); }
-function sf(id, val){ const el=g(id); if(el) el.textContent=val||''; }
+function sf(id, val){ const el=g(id); if(el) el.textContent=(val||''); }
 
 // 預設今日（民國）
 (function(){
-  const now = new Date();
-  g('year').value  = now.getFullYear()-1911;
-  g('month').value = now.getMonth()+1;
-  g('day').value   = now.getDate();
+  const now=new Date();
+  g('year').value=now.getFullYear()-1911;
+  g('month').value=now.getMonth()+1;
+  g('day').value=now.getDate();
 })();
 
 function onOfficeChange(){
-  const o = document.querySelector('input[name=office]:checked').value;
-  g('handler').value = AGENTS[o].name;
+  const o=document.querySelector('input[name=office]:checked').value;
+  g('handler').value=AGENTS[o].name;
 }
 
-function toggleOther(){ g('otherBlock').style.display = g('cbOther').checked?'':'none'; }
-function toggleDiffApp(){ g('diffAppBlock').classList.toggle('hidden', !g('diffApp').checked); }
+// 申請地址同步→聯絡地址
+function onRegAddrInput(){
+  if(g('contactSame').checked) g('contactAddr').value=g('regAddr').value;
+}
+function syncContact(){
+  const same=g('contactSame').checked;
+  g('contactAddr').disabled=same;
+  if(same) g('contactAddr').value=g('regAddr').value;
+}
+
+// 申請人申請地址同步
+function onAppRegAddrInput(){
+  if(g('appContactSame').checked) g('appContactAddr').value=g('appRegAddr').value;
+}
+function syncAppContact(){
+  const same=g('appContactSame').checked;
+  g('appContactAddr').disabled=same;
+  if(same) g('appContactAddr').value=g('appRegAddr').value;
+}
+
+function toggleOther(){ g('otherBlock').style.display=g('cbOther').checked?'':'none'; }
+function toggleDiffApp(){ g('diffAppBlock').classList.toggle('hidden',!g('diffApp').checked); }
+
+// 多件案件名稱
+function addCase(){
+  const div=document.createElement('div');
+  div.className='case-item';
+  div.innerHTML='<input type="text" placeholder="例：某某品牌"><button onclick="removeCase(this)" title="刪除">✕</button>';
+  g('caseList').appendChild(div);
+}
+function removeCase(btn){
+  const items=g('caseList').querySelectorAll('.case-item');
+  if(items.length>1) btn.closest('.case-item').remove();
+}
 
 // 數字→中文大寫
 function toCN(n){
@@ -358,13 +415,12 @@ function toCN(n){
     }
     return r;
   }
-  let r='', tmp=n;
+  let r='',tmp=n;
   if(tmp>=100000000){ r+=four(Math.floor(tmp/100000000))+'億'; tmp%=100000000; if(tmp>0&&tmp<10000000) r+='零'; }
   if(tmp>=10000){     r+=four(Math.floor(tmp/10000))+'萬';     tmp%=10000;     if(tmp>0&&tmp<1000) r+='零'; }
   if(tmp>0)           r+=four(tmp);
   return r.replace(/零+/g,'零').replace(/零$/,'')+'元整';
 }
-
 function updateFeeHint(){
   const v=g('feeAmount').value;
   g('feeHint').textContent=v?'→ '+toCN(v):'';
@@ -374,11 +430,10 @@ function calcFees(){
   const p=parseInt(g('twPrice').value)||0;
   const q=parseInt(g('twQty').value)||0;
   g('twTotal').textContent=(p*q).toLocaleString();
-  g('foreignBlock').querySelectorAll('.f-total').forEach(el=>{
-    const row=el.closest('.foreign-item');
+  g('foreignBlock').querySelectorAll('.foreign-item').forEach(row=>{
     const fp=parseInt(row.querySelector('.f-price').value)||0;
     const fq=parseInt(row.querySelector('.f-qty').value)||0;
-    el.textContent=(fp*fq).toLocaleString();
+    row.querySelector('.f-total').textContent=(fp*fq).toLocaleString();
   });
 }
 
@@ -387,7 +442,7 @@ function addForeignFee(){
   wrap.className='foreign-item';
   wrap.innerHTML=`
     <div><label>國家</label><input type="text" class="f-country" placeholder="日本"></div>
-    <div><label>價格（元）</label><input type="number" class="f-price" value="7000" min="0" oninput="calcFees()"></div>
+    <div><label>價格</label><input type="number" class="f-price" value="7000" min="0" oninput="calcFees()"></div>
     <div><label>數量</label><input type="number" class="f-qty" value="1" min="1" oninput="calcFees()"></div>
     <div><label>總價</label><div class="foreign-total-box f-total">7,000</div></div>
     <div style="display:flex;align-items:flex-end;padding-bottom:2px"><button onclick="this.closest('.foreign-item').remove();calcFees()" style="border:1px solid #ccc;border-radius:3px;cursor:pointer;padding:4px 6px;background:#fff;font-size:.8rem">✕</button></div>`;
@@ -399,98 +454,110 @@ function generate(){
   const agent=AGENTS[office];
   const handler=g('handler').value||agent.name;
 
-  const name   = g('clientName').value||'＿＿＿＿＿＿';
-  const rep    = g('representative').value;
-  const idNo   = g('idNo').value;
-  const addr   = g('address').value||'＿＿＿＿＿＿＿＿';
-  const mobile = g('mobile').value;
-  const phone  = g('phone').value;
-  const fax    = g('fax').value;
+  // 委任人資料
+  const cName     = g('clientName').value||'＿＿＿＿＿＿';
+  const cRep      = g('representative').value;
+  const cId       = g('idNo').value;
+  const cRegAddr  = g('regAddr').value||'＿＿＿＿＿＿＿＿';
+  const cContact  = g('contactAddr').value||cRegAddr;
+  const mobile    = g('mobile').value;
+  const phone     = g('phone').value;
+  const fax       = g('fax').value;
 
-  const caseName = g('caseName').value||'＿＿＿＿';
+  // 商標申請人（預設同委任人）
+  const diff      = g('diffApp').checked;
+  const poaName   = diff?(g('appName').value||'＿＿＿＿'):cName;
+  const poaRep    = diff?g('appRep').value:cRep;
+  const poaAddr   = diff?(g('appRegAddr').value||'＿＿＿＿'):cRegAddr;
+  const appId     = diff?g('appId').value:cId;
+  const appContactAddr = diff?(g('appContactAddr').value||poaAddr):cContact;
+
+  // 案件名稱（多件）
+  const cases=[...g('caseList').querySelectorAll('input')].map(i=>i.value.trim()).filter(v=>v);
+  const caseStr=cases.length?cases.join('、'):'＿＿＿＿';
+
+  const markType = document.querySelector('input[name=markType]:checked').value;
   const color    = document.querySelector('input[name=color]:checked').value;
   const fontType = document.querySelector('input[name=fontType]:checked').value;
   const cats     = g('categories').value||'＿＿';
   const goods    = g('goodsServices').value;
 
   const otherVal = g('otherText').value;
-  const types = [...document.querySelectorAll('input[name=caseType]:checked')]
+  const types=[...document.querySelectorAll('input[name=caseType]:checked')]
     .map(c=>c.value==='其他'&&otherVal?`其他（${otherVal}）`:c.value);
-  const typesStr = types.length?types.join('、'):'＿＿＿＿';
-
-  const diff = g('diffApp').checked;
-  const appName = diff?(g('appName').value||'＿＿＿＿'):name;
-  const appRep  = diff?g('appRep').value:rep;
-  const appId   = diff?g('appId').value:idNo;
-  const appAddr = diff?(g('appAddr').value||addr):addr;
+  const typesStr=types.length?types.join('、'):'＿＿＿＿';
 
   const twP=parseInt(g('twPrice').value)||0;
   const twQ=parseInt(g('twQty').value)||1;
-  const twFeeStr=`${twP.toLocaleString()} × ${twQ} 件 = ${(twP*twQ).toLocaleString()}`;
+  const twFeeStr=`${twP.toLocaleString()} × ${twQ} 件 = ${(twP*twQ).toLocaleString()} 元`;
 
   const feeAmt=g('feeAmount').value;
   const feeCN=feeAmt?toCN(feeAmt):'＿＿＿＿＿＿＿＿';
   const backFee=g('backFee').value||'無';
-
   const yr=g('year').value||'　　　';
   const mo=g('month').value||'　';
   const dy=g('day').value||'　';
 
-  // ── 委任書 ──
-  sf('p-name', name);
-  sf('p-addr', addr);
+  // ── 委任書：使用申請人資料 ──
+  sf('p-name', poaName);
+  sf('p-addr', poaAddr);
   sf('p-agent', agent.name);
   sf('p-regno', agent.regNo);
-  sf('p-year', yr); sf('p-month', mo); sf('p-day', dy);
-  if(rep){ g('p-rep-row').style.display=''; sf('p-rep', rep); }
-  else      g('p-rep-row').style.display='none';
+  sf('p-year',yr); sf('p-month',mo); sf('p-day',dy);
+  if(poaRep){ g('p-rep-row').style.display=''; sf('p-rep',poaRep); }
+  else { g('p-rep-row').style.display='none'; }
 
   // ── 契約書 ──
-  sf('c-caseName', caseName);
+  sf('c-caseName', caseStr);
   sf('c-color', color);
   sf('c-font', fontType);
   sf('c-cats', cats);
+  sf('c-markType', markType);
   sf('c-goods', goods);
   g('c-goods-row').style.display=goods?'':'none';
   sf('c-types', typesStr);
-  sf('c-appName', appName);
-  sf('c-appRep', appRep);
-  sf('c-appId', appId);
-  sf('c-appAddr', appAddr);
-  g('c-app-rep-row').style.display=appRep?'':'none';
+
+  // 申請人（契約書第一條）= 商標申請人（diff or 委任人）
+  sf('c-appName', poaName);
+  sf('c-appRep',  poaRep);
+  sf('c-appId',   appId);
+  sf('c-appAddr', poaAddr);
+  g('c-app-rep-row').style.display=poaRep?'':'none';
   g('c-app-id-row').style.display=appId?'':'none';
 
   sf('c-twFee', twFeeStr);
   sf('c-feeText', feeCN);
   sf('c-backFee', backFee);
 
-  // 外國費用（第一筆放同一列）
+  // 外國費用
   const fRows=g('foreignBlock').querySelectorAll('.foreign-item');
   if(fRows.length>0){
     const fp=parseInt(fRows[0].querySelector('.f-price').value)||0;
     const fq=parseInt(fRows[0].querySelector('.f-qty').value)||1;
     sf('c-f1n', fRows[0].querySelector('.f-country').value||'');
-    sf('c-f1a', `${fp.toLocaleString()} × ${fq} 件 = ${(fp*fq).toLocaleString()}`);
+    sf('c-f1a', `${fp.toLocaleString()} × ${fq} 件 = ${(fp*fq).toLocaleString()} 元`);
   } else { sf('c-f1n',''); sf('c-f1a',''); }
 
-  sf('c-name', name);
-  sf('c-rep', rep);
+  // 契約書甲方（委任人資料）
+  sf('c-name', cName);
+  sf('c-rep', cRep);
   sf('c-handler', handler);
-  sf('c-id', idNo);
-  sf('c-addr', addr);
+  sf('c-id', cId);
+  sf('c-regAddr', cRegAddr);
+  sf('c-contactAddr', cContact);
   sf('c-mobile', mobile);
   sf('c-phone', phone);
   sf('c-fax', fax);
-  sf('c-year', yr); sf('c-month', mo); sf('c-day', dy);
+  sf('c-year',yr); sf('c-month',mo); sf('c-day',dy);
 }
 
 function showTab(tab){
-  g('tab-poa').classList.toggle('hidden', tab!=='poa');
-  g('tab-contract').classList.toggle('hidden', tab!=='contract');
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='poa')||(i===1&&tab==='contract')));
+  g('tab-poa').classList.toggle('hidden',tab!=='poa');
+  g('tab-contract').classList.toggle('hidden',tab!=='contract');
+  document.querySelectorAll('.tab').forEach((t,i)=>
+    t.classList.toggle('active',(i===0&&tab==='poa')||(i===1&&tab==='contract')));
 }
 
-// 頁面載入後初始化
 calcFees();
 generate();
 </script>
