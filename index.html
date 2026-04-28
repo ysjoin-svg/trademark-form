@@ -213,35 +213,32 @@ input[type=radio], input[type=checkbox] { width:auto; }
     <input type="text" id="otherText" placeholder="請說明其他性質內容">
   </div>
 
-  <!-- ═══ 申請人與委任人不同 ═══ -->
-  <label class="toggle-label">
-    <input type="checkbox" id="diffApp" onchange="toggleDiffApp()"> 商標申請人與委任人不同
-  </label>
-  <div id="diffAppBlock" class="sub-block hidden">
-    <div id="appList">
-      <div class="app-item">
-        <div class="app-header">
-          <span class="app-title">申請人 1</span>
-          <button onclick="removeApp(this)">✕</button>
-        </div>
-        <label>姓名 / 公司名稱 <span class="req">＊</span></label>
-        <input type="text" class="app-name" placeholder="例：王大明 / 某某有限公司">
-        <label class="sync-label">
-          <input type="checkbox" class="app-individual" onchange="toggleAppIndividual(this)"> 個人申請
-        </label>
-        <div class="app-corp-block">
-          <label>代表人</label>
-          <input type="text" class="app-rep" placeholder="選填">
-        </div>
-        <label class="app-id-label">統一編號</label>
-        <input type="text" class="app-id" placeholder="選填">
-        <label>申請地址 <span class="req">＊</span></label>
-        <div class="hint">請填營業登記或身分證上的地址</div>
-        <input type="text" class="app-addr" placeholder="">
+  <!-- ═══ 商標申請人 ═══ -->
+  <div class="section-title">商標申請人（可多位）</div>
+  <div class="hint" style="margin-bottom:6px">若申請人同委任人，此區留空即可</div>
+  <div id="appList">
+    <div class="app-item">
+      <div class="app-header">
+        <span class="app-title">申請人 1</span>
+        <button onclick="removeApp(this)">✕</button>
       </div>
+      <label>姓名 / 公司名稱</label>
+      <input type="text" class="app-name" placeholder="選填，留空同委任人">
+      <label class="sync-label">
+        <input type="checkbox" class="app-individual" onchange="toggleAppIndividual(this)"> 個人申請
+      </label>
+      <div class="app-corp-block">
+        <label>代表人</label>
+        <input type="text" class="app-rep" placeholder="選填">
+      </div>
+      <label class="app-id-label">統一編號</label>
+      <input type="text" class="app-id" placeholder="選填">
+      <label>申請地址</label>
+      <div class="hint">請填營業登記或身分證上的地址</div>
+      <input type="text" class="app-addr" placeholder="選填，留空同委任人">
     </div>
-    <button class="add-btn" onclick="addApp()" style="margin-top:6px">＋ 新增申請人</button>
   </div>
+  <button class="add-btn" onclick="addApp()" style="margin-top:6px">＋ 新增申請人</button>
 
   <!-- ═══ 費用 ═══ -->
   <div class="section-title">費用</div>
@@ -435,7 +432,7 @@ function onOfficeChange(){
   g('handler').value=AGENTS[o].name;
 }
 
-// ── 多位申請人（diffApp 啟用時） ──
+// ── 多位申請人 ──
 let appItemCount=1;
 
 function toggleAppIndividual(cb){
@@ -485,7 +482,6 @@ function removeApp(btn){
   }
 }
 
-function toggleDiffApp(){ g('diffAppBlock').classList.toggle('hidden',!g('diffApp').checked); }
 function toggleOther(){ g('otherBlock').style.display=g('cbOther').checked?'':'none'; }
 
 function addCase(){
@@ -647,27 +643,32 @@ function generate(){
   g('c-goods-row').style.display=goods?'':'none';
   sf('c-types', typesStr);
 
-  // 申請人區塊：未勾選時同委任人，勾選時顯示多位申請人
+  // 申請人區塊：有填名稱才列出，否則同委任人
+  const appItems=[...g('appList').querySelectorAll('.app-item')]
+    .map(el=>({
+      name: el.querySelector('.app-name').value.trim(),
+      isInd: el.querySelector('.app-individual').checked,
+      rep:  (el.querySelector('.app-rep')?.value||'').trim(),
+      id:   (el.querySelector('.app-id')?.value||'').trim(),
+      addr: el.querySelector('.app-addr').value.trim()
+    })).filter(a=>a.name);
   let appHtml='';
-  if(!g('diffApp').checked){
+  if(!appItems.length){
+    // 同委任人
     let line=`申請人：<span class="fill">${cName}</span>`;
     if(cRep) line+=`　代表人：<span class="fill">${cRep}</span>`;
     if(cId)  line+=`　統一編號：<span class="fill">${cId}</span>`;
     appHtml=`<div>${line}</div><div>申請地址：<span class="fill">${cReg}</span></div>`;
   } else {
-    [...g('appList').querySelectorAll('.app-item')].forEach(el=>{
-      const name=el.querySelector('.app-name').value.trim()||'＿＿＿＿';
-      const isInd=el.querySelector('.app-individual').checked;
-      const rep=(el.querySelector('.app-rep')?.value||'').trim();
-      const id=(el.querySelector('.app-id')?.value||'').trim();
-      const addr=el.querySelector('.app-addr').value.trim()||'＿＿＿＿＿＿＿＿';
-      let line=`申請人：<span class="fill">${name}</span>`;
-      if(!isInd){
-        if(rep) line+=`　代表人：<span class="fill">${rep}</span>`;
-        if(id)  line+=`　統一編號：<span class="fill">${id}</span>`;
+    appItems.forEach(a=>{
+      let line=`申請人：<span class="fill">${a.name}</span>`;
+      if(!a.isInd){
+        if(a.rep) line+=`　代表人：<span class="fill">${a.rep}</span>`;
+        if(a.id)  line+=`　統一編號：<span class="fill">${a.id}</span>`;
       } else {
-        if(id)  line+=`　身分證字號：<span class="fill">${id}</span>`;
+        if(a.id)  line+=`　身分證字號：<span class="fill">${a.id}</span>`;
       }
+      const addr=a.addr||cReg;
       appHtml+=`<div>${line}</div><div>申請地址：<span class="fill">${addr}</span></div>`;
     });
   }
