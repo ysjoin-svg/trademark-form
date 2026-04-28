@@ -66,9 +66,9 @@ input[type=radio], input[type=checkbox] { width:auto; }
 .poa { padding:22mm 25mm; font-size:12pt; line-height:2; }
 .poa-title { text-align:center; font-size:20pt; font-weight:bold; letter-spacing:8px; margin-bottom:20pt; }
 .poa-body { text-indent:2em; text-align:justify; margin-bottom:18pt; }
-.poa-table { width:100%; border-collapse:collapse; table-layout:fixed; }
+.poa-table { width:100%; border-collapse:collapse; }
 .poa-table td { padding:3.5pt 4pt; vertical-align:top; }
-.poa-table .lbl { white-space:nowrap; width:90pt; letter-spacing:3px; text-align:right; }
+.poa-table .lbl { white-space:nowrap; width:90pt; letter-spacing:3px; }
 .poa-date { margin-top:22pt; text-align:center; letter-spacing:6px; }
 
 /* ── 契約書 ── */
@@ -102,12 +102,16 @@ input[type=radio], input[type=checkbox] { width:auto; }
   header, .form-panel, .tab-bar { display:none !important; }
   .preview-panel { padding:0; }
   .doc-wrap { box-shadow:none; margin:0; width:100%; }
-  /* 契約書列印壓縮間距以符合單頁 */
-  .ct { padding:6mm 12mm; line-height:1.52; }
-  .ct-art { margin-bottom:3pt; }
-  .sign-area { margin-top:5pt; }
-  .ct-date { margin-top:4pt; }
-  @page { margin:1cm; }
+  /* 契約書列印強制單頁 */
+  .ct { padding:5mm 10mm; line-height:1.35; }
+  .ct-title { margin-bottom:4pt; }
+  .ct-intro { margin-bottom:2pt; }
+  .ct-art { margin-bottom:2pt; }
+  .sign-area { margin-top:3pt; }
+  .sign-cols { gap:0.5pt 10pt; }
+  .sign-row { padding:0; }
+  .ct-date { margin-top:3pt; }
+  @page { margin:0.8cm; }
 }
 </style>
 </head>
@@ -270,7 +274,7 @@ input[type=radio], input[type=checkbox] { width:auto; }
         <tr><td class="lbl">地　　　址：</td><td><span class="fill" id="p-addr">＿＿＿＿＿＿＿＿＿＿</span></td></tr>
         <tr><td colspan="2" style="height:10pt"></td></tr>
         <tr><td class="lbl">受　任　人：</td><td><span class="fill" id="p-agent">李宗穎</span></td></tr>
-        <tr><td class="lbl">登錄字號：</td><td><span class="fill" id="p-regno">TT000087</span></td></tr>
+        <tr><td class="lbl">登　錄　號：</td><td><span class="fill" id="p-regno">TT000087</span></td></tr>
         <tr><td class="lbl">事　務　所：</td><td>永旭智慧財產事務所</td></tr>
         <tr><td class="lbl">高　雄　所：</td><td>高雄市左營區子華路116號2樓之3</td></tr>
         <tr><td class="lbl">台　北　所：</td><td>臺北市中正區莒光路47號1樓</td></tr>
