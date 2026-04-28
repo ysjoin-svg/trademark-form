@@ -81,11 +81,11 @@ input[type=radio], input[type=checkbox] { width:auto; }
 /* 編號條目：flex 讓子項目對齊內容欄 */
 .ct-num-item { display:flex; padding-left:2em; }
 .ct-num { flex:none; width:2em; }
-.ct-num-content { flex:1; }
+.ct-num-content { flex:1; overflow-wrap:break-word; word-break:break-all; min-width:0; }
 .ct-num-content > div { margin-bottom:1pt; }
 
 /* 長條文字（第二條第四五款等） */
-.ct-item { padding-left:2em; }
+.ct-item { padding-left:2em; overflow-wrap:break-word; word-break:break-all; }
 .ct-fee-table { width:100%; border-collapse:collapse; margin:3pt 0; font-size:9.5pt; }
 .ct-fee-table th, .ct-fee-table td { border:1px solid #333; padding:2.5pt 5pt; text-align:center; }
 .ct-fee-table th { font-weight:bold; }
