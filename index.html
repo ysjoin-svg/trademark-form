@@ -48,6 +48,11 @@ input[type=radio], input[type=checkbox] { width:auto; }
 .btn-generate:hover { background:#254e7a; }
 .toggle-label { display:flex; align-items:center; gap:6px; font-size:.82rem; color:#1a3a5c; font-weight:600; cursor:pointer; margin:12px 0 6px; }
 .sub-block { background:#f8f8f8; border:1px solid #e0e0e0; border-radius:4px; padding:10px; margin-top:4px; }
+/* 申請人列表 */
+.applicant-item { background:#eef3f8; border:1px solid #b0c4d8; border-radius:4px; padding:8px; margin-bottom:6px; }
+.app-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.app-title { font-size:.75rem; font-weight:700; color:#1a3a5c; }
+.app-header button { padding:2px 7px; border:1px solid #ccc; border-radius:3px; cursor:pointer; background:#fff; font-size:.8rem; }
 
 /* ── 右側預覽 ── */
 .preview-panel { flex:1; padding:18px; overflow-y:auto; background:#ddd; }
@@ -132,19 +137,32 @@ input[type=radio], input[type=checkbox] { width:auto; }
     <label><input type="radio" name="office" value="台北" onchange="onOfficeChange()"> 台北所（林家均）</label>
   </div>
 
-  <!-- ═══ 委任人資料 ═══ -->
-  <div class="section-title">委任人資料</div>
-  <label>姓名 / 公司名稱 <span class="req">＊</span></label>
-  <input type="text" id="clientName" placeholder="例：王大明 / 某某有限公司">
-  <label>代表人</label>
-  <div class="hint">委任人非個人才需填寫</div>
-  <input type="text" id="representative" placeholder="選填">
-  <label>統一編號 / 身分證字號 <span class="req">＊</span></label>
-  <input type="text" id="idNo" placeholder="必填">
-  <label>申請地址 <span class="req">＊</span></label>
-  <div class="hint">請填營業登記或身分證上的地址</div>
-  <input type="text" id="regAddr" placeholder="例：高雄市左營區…" oninput="onRegAddrInput()">
-  <label>聯絡地址</label>
+  <!-- ═══ 申請人資料 ═══ -->
+  <div class="section-title">申請人資料（可多位）</div>
+  <div id="applicantList">
+    <div class="applicant-item">
+      <div class="app-header">
+        <span class="app-title">申請人 1</span>
+        <button onclick="removeApplicant(this)">✕</button>
+      </div>
+      <label>姓名 / 公司名稱 <span class="req">＊</span></label>
+      <input type="text" class="app-name" placeholder="例：王大明 / 某某有限公司">
+      <label class="sync-label">
+        <input type="checkbox" class="app-individual" onchange="toggleIndividual(this)"> 個人申請
+      </label>
+      <div class="app-corp-block">
+        <label>代表人 <span class="req">＊</span></label>
+        <input type="text" class="app-rep" placeholder="必填">
+      </div>
+      <label class="app-id-label">統一編號 <span class="req">＊</span></label>
+      <input type="text" class="app-id" placeholder="必填">
+      <label>申請地址 <span class="req">＊</span></label>
+      <div class="hint">請填營業登記或身分證上的地址</div>
+      <input type="text" class="app-addr" oninput="onFirstAddrInput(this)" placeholder="例：高雄市左營區…">
+    </div>
+  </div>
+  <button class="add-btn" onclick="addApplicant()">＋ 新增申請人</button>
+  <label style="margin-top:8px">聯絡地址</label>
   <div class="hint">郵寄地址</div>
   <label class="sync-label"><input type="checkbox" id="contactSame" onchange="syncContact()"> 與申請地址相同</label>
   <input type="text" id="contactAddr" placeholder="例：高雄市…">
@@ -208,23 +226,6 @@ input[type=radio], input[type=checkbox] { width:auto; }
     <input type="text" id="otherText" placeholder="請說明其他性質內容">
   </div>
 
-  <!-- ═══ 申請人與委任人不同 ═══ -->
-  <label class="toggle-label">
-    <input type="checkbox" id="diffApp" onchange="toggleDiffApp()"> 商標申請人與委任人不同
-  </label>
-  <div id="diffAppBlock" class="sub-block hidden">
-    <label>申請人姓名 / 公司名稱 <span class="req">＊</span></label>
-    <input type="text" id="appName" placeholder="例：王大明 / 某某有限公司">
-    <label>代表人</label>
-    <div class="hint">委任人非個人才需填寫</div>
-    <input type="text" id="appRep" placeholder="選填">
-    <label>統一編號 / 身分證字號 <span class="req">＊</span></label>
-    <input type="text" id="appId" placeholder="必填">
-    <label>申請地址 <span class="req">＊</span></label>
-    <div class="hint">請填營業登記或身分證上的地址</div>
-    <input type="text" id="appRegAddr" placeholder="">
-  </div>
-
   <!-- ═══ 費用 ═══ -->
   <div class="section-title">費用</div>
   <label>台灣費用</label>
@@ -269,16 +270,16 @@ input[type=radio], input[type=checkbox] { width:auto; }
       <div class="poa-title">委　任　書</div>
       <div class="poa-body">茲委任下列受任人為特別授權之商標代理人，得單獨或共同代理：向商標主管機關辦理有關商標／服務標章／團體標章／證明標章／團體標章之申請、撤回、補正、移轉、分割、設定質權、延展、授權、變更、讓與、減縮商品或服務、拋棄商標權、繳納註冊費、發補書證、查閱、影印、發給各種證明文件等及其他有關事項之必要行為，核駁理由先行通知之陳述意見，異議、評定、廢止之提出及各該程序之答辯，以及申請舉行與出席聽證，訴願、行政訴訟之提出及撤回，代收上述程序有關之一切書證或物件，並有收受送達、捨棄、認諾、撤回及選任／解任複代理人之權，辦理商標法及其他法令所定關於商標一切程序之權，及代為保障本件權益之一切行為之權，並得隨時向主管機關申請減列或解任部分代理人。</div>
       <table class="poa-table">
-        <tr><td class="lbl">委　任　人：</td><td><span class="fill" id="p-name">＿＿＿＿＿＿</span>（簽章）</td></tr>
-        <tr id="p-rep-row"><td class="lbl">代　表　人：</td><td><span class="fill" id="p-rep">＿＿＿＿＿＿</span></td></tr>
-        <tr><td class="lbl">地　　　址：</td><td><span class="fill" id="p-addr">＿＿＿＿＿＿＿＿＿＿</span></td></tr>
-        <tr><td colspan="2" style="height:10pt"></td></tr>
-        <tr><td class="lbl">受　任　人：</td><td><span class="fill" id="p-agent">李宗穎</span></td></tr>
-        <tr><td class="lbl">登　錄　號：</td><td><span class="fill" id="p-regno">TT000087</span></td></tr>
-        <tr><td class="lbl">事　務　所：</td><td>永旭智慧財產事務所</td></tr>
-        <tr><td class="lbl">高　雄　所：</td><td>高雄市左營區子華路116號2樓之3</td></tr>
-        <tr><td class="lbl">台　北　所：</td><td>臺北市中正區莒光路47號1樓</td></tr>
-        <tr><td class="lbl">電　　　話：</td><td>(07)345-3388（總機）</td></tr>
+        <tbody id="poa-app-rows"></tbody>
+        <tbody>
+          <tr><td colspan="2" style="height:10pt"></td></tr>
+          <tr><td class="lbl">受　任　人：</td><td><span class="fill" id="p-agent">李宗穎</span></td></tr>
+          <tr><td class="lbl">登　錄　號：</td><td><span class="fill" id="p-regno">TT000087</span></td></tr>
+          <tr><td class="lbl">事　務　所：</td><td>永旭智慧財產事務所</td></tr>
+          <tr><td class="lbl">高　雄　所：</td><td>高雄市左營區子華路116號2樓之3</td></tr>
+          <tr><td class="lbl">台　北　所：</td><td>臺北市中正區莒光路47號1樓</td></tr>
+          <tr><td class="lbl">電　　　話：</td><td>(07)345-3388（總機）</td></tr>
+        </tbody>
       </table>
       <div class="poa-date">中　華　民　國　<span class="fill" id="p-year">　　　</span>　年　<span class="fill" id="p-month">　　</span>　月　<span class="fill" id="p-day">　　</span>　日</div>
     </div>
@@ -319,14 +320,12 @@ input[type=radio], input[type=checkbox] { width:auto; }
           </div>
         </div>
 
-        <!-- 四、申請人 + 代表人 + 統一編號 + 申請地址（同一內容區塊對齊） -->
+        <!-- 四、申請人（可多位） -->
         <div class="ct-num-item">
           <span class="ct-num">四、</span>
-          <div class="ct-num-content">
-            <div>申請人：<span class="fill" id="c-appName">＿＿＿＿＿＿</span></div>
-            <div id="c-app-rep-row" style="display:none">代表人：<span class="fill" id="c-appRep"></span></div>
-            <div id="c-app-id-row" style="display:none">統一編號：<span class="fill" id="c-appId"></span></div>
-            <div>申請地址：<span class="fill" id="c-appAddr">＿＿＿＿＿＿＿＿</span></div>
+          <div class="ct-num-content" id="c-appBlock">
+            <div>申請人：<span class="fill">＿＿＿＿＿＿</span></div>
+            <div>申請地址：<span class="fill">＿＿＿＿＿＿＿＿</span></div>
           </div>
         </div>
       </div>
@@ -419,17 +418,58 @@ function onOfficeChange(){
   g('handler').value=AGENTS[o].name;
 }
 
-function onRegAddrInput(){
-  if(g('contactSame').checked) g('contactAddr').value=g('regAddr').value;
+// ── 申請人 ──
+let appCount=1;
+
+function toggleIndividual(cb){
+  const item=cb.closest('.applicant-item');
+  const isInd=cb.checked;
+  item.querySelector('.app-corp-block').style.display=isInd?'none':'';
+  const lbl=item.querySelector('.app-id-label');
+  lbl.innerHTML=isInd?'身分證號碼 <span class="req">＊</span>':'統一編號 <span class="req">＊</span>';
 }
+
+function onFirstAddrInput(inp){
+  const first=g('applicantList').querySelector('.app-addr');
+  if(inp===first && g('contactSame').checked) g('contactAddr').value=inp.value;
+}
+
 function syncContact(){
   const same=g('contactSame').checked;
   g('contactAddr').disabled=same;
-  if(same) g('contactAddr').value=g('regAddr').value;
+  if(same){ const a=g('applicantList').querySelector('.app-addr'); if(a) g('contactAddr').value=a.value; }
+}
+
+function addApplicant(){
+  appCount++;
+  const d=document.createElement('div');
+  d.className='applicant-item';
+  d.innerHTML=`<div class="app-header"><span class="app-title">申請人 ${appCount}</span><button onclick="removeApplicant(this)">✕</button></div>
+    <label>姓名 / 公司名稱 <span class="req">＊</span></label>
+    <input type="text" class="app-name" placeholder="例：王大明 / 某某有限公司">
+    <label class="sync-label"><input type="checkbox" class="app-individual" onchange="toggleIndividual(this)"> 個人申請</label>
+    <div class="app-corp-block">
+      <label>代表人 <span class="req">＊</span></label>
+      <input type="text" class="app-rep" placeholder="必填">
+    </div>
+    <label class="app-id-label">統一編號 <span class="req">＊</span></label>
+    <input type="text" class="app-id" placeholder="必填">
+    <label>申請地址 <span class="req">＊</span></label>
+    <div class="hint">請填營業登記或身分證上的地址</div>
+    <input type="text" class="app-addr" placeholder="例：高雄市左營區…">`;
+  g('applicantList').appendChild(d);
+}
+
+function removeApplicant(btn){
+  if(g('applicantList').querySelectorAll('.applicant-item').length>1){
+    btn.closest('.applicant-item').remove();
+    g('applicantList').querySelectorAll('.applicant-item').forEach((el,i)=>{
+      const t=el.querySelector('.app-title'); if(t) t.textContent=`申請人 ${i+1}`;
+    });
+  }
 }
 
 function toggleOther(){ g('otherBlock').style.display=g('cbOther').checked?'':'none'; }
-function toggleDiffApp(){ g('diffAppBlock').classList.toggle('hidden',!g('diffApp').checked); }
 
 function addCase(){
   const div=document.createElement('div');
@@ -539,22 +579,34 @@ function generate(){
   const agent=AGENTS[office];
   const handler=g('handler').value||agent.name;
 
-  // 委任人資料
-  const cName    = g('clientName').value||'＿＿＿＿＿＿';
-  const cRep     = g('representative').value;
-  const cId      = g('idNo').value;
-  const cReg     = g('regAddr').value||'＿＿＿＿＿＿＿＿';
-  const cContact = g('contactAddr').value||cReg;
-  const mobile   = g('mobile').value;
-  const phone    = g('phone').value;
-  const fax      = g('fax').value;
+  // 申請人資料（可多位）
+  const apps=[...g('applicantList').querySelectorAll('.applicant-item')].map(el=>({
+    name: el.querySelector('.app-name').value.trim()||'＿＿＿＿',
+    isInd: el.querySelector('.app-individual').checked,
+    rep:  (el.querySelector('.app-rep')?.value||'').trim(),
+    id:   (el.querySelector('.app-id')?.value||'').trim(),
+    addr: el.querySelector('.app-addr').value.trim()||'＿＿＿＿＿＿＿＿'
+  }));
+  const first=apps[0];
+  const cContact=g('contactAddr').value||first.addr;
+  const mobile=g('mobile').value;
+  const phone=g('phone').value;
+  const fax=g('fax').value;
+  const yr=g('year').value||'　　　';
+  const mo=g('month').value||'　';
+  const dy=g('day').value||'　';
 
-  // 申請人（委任書委任人欄位使用此資料）
-  const diff    = g('diffApp').checked;
-  const poaName = diff?(g('appName').value||'＿＿＿＿'):cName;
-  const poaRep  = diff?g('appRep').value:cRep;
-  const poaAddr = diff?(g('appRegAddr').value||'＿＿＿＿'):cReg;
-  const appId   = diff?g('appId').value:cId;
+  // 委任書：每位申請人顯示各自地址
+  let poaHtml='';
+  apps.forEach(a=>{
+    poaHtml+=`<tr><td class="lbl">委　任　人：</td><td><span class="fill">${a.name}</span>（簽章）</td></tr>`;
+    if(!a.isInd && a.rep) poaHtml+=`<tr><td class="lbl">代　表　人：</td><td><span class="fill">${a.rep}</span>（簽章）</td></tr>`;
+    poaHtml+=`<tr><td class="lbl">地　　　址：</td><td><span class="fill">${a.addr}</span></td></tr>`;
+  });
+  g('poa-app-rows').innerHTML=poaHtml;
+  sf('p-agent', agent.name);
+  sf('p-regno', agent.regNo);
+  sf('p-year',yr); sf('p-month',mo); sf('p-day',dy);
 
   // 案件名稱（多件）
   const cases=[...g('caseList').querySelectorAll('input')].map(i=>i.value.trim()).filter(v=>v);
@@ -574,20 +626,8 @@ function generate(){
   const feeAmt=g('feeAmount').value;
   const feeCN=feeAmt?toCN(feeAmt):'＿＿＿＿＿＿＿＿';
   const backFee=g('backFee').value||'無';
-  const yr=g('year').value||'　　　';
-  const mo=g('month').value||'　';
-  const dy=g('day').value||'　';
 
-  // ── 委任書（使用申請人資料） ──
-  sf('p-name', poaName);
-  sf('p-addr', poaAddr);
-  sf('p-agent', agent.name);
-  sf('p-regno', agent.regNo);
-  sf('p-year',yr); sf('p-month',mo); sf('p-day',dy);
-  if(poaRep){ g('p-rep-row').style.display=''; sf('p-rep',poaRep); }
-  else g('p-rep-row').style.display='none';
-
-  // ── 契約書 ──
+  // 契約書
   sf('c-caseName', caseStr);
   sf('c-color', color);
   sf('c-font', fontType);
@@ -597,23 +637,29 @@ function generate(){
   g('c-goods-row').style.display=goods?'':'none';
   sf('c-types', typesStr);
 
-  sf('c-appName', poaName);
-  sf('c-appRep',  poaRep);
-  sf('c-appId',   appId);
-  sf('c-appAddr', poaAddr);
-  g('c-app-rep-row').style.display=poaRep?'':'none';
-  g('c-app-id-row').style.display=appId?'':'none';
+  // 申請人區塊（可多位）
+  let appHtml='';
+  apps.forEach(a=>{
+    let line=`申請人：<span class="fill">${a.name}</span>`;
+    if(!a.isInd){
+      if(a.rep) line+=`　代表人：<span class="fill">${a.rep}</span>`;
+      if(a.id)  line+=`　統一編號：<span class="fill">${a.id}</span>`;
+    } else {
+      if(a.id)  line+=`　身分證字號：<span class="fill">${a.id}</span>`;
+    }
+    appHtml+=`<div>${line}</div><div>申請地址：<span class="fill">${a.addr}</span></div>`;
+  });
+  g('c-appBlock').innerHTML=appHtml;
 
   buildFeeTable();
-
   sf('c-feeText', feeCN);
   sf('c-backFee', backFee);
 
-  // 甲方（委任人資料）
-  sf('c-name', cName);
-  sf('c-rep', cRep);
+  // 甲方簽名（第一申請人）
+  sf('c-name', first.name);
+  sf('c-rep', first.isInd?'':first.rep);
   sf('c-handler', handler);
-  sf('c-id', cId);
+  sf('c-id', first.id);
   sf('c-contactAddr', cContact);
   sf('c-mobile', mobile);
   sf('c-phone', phone);
