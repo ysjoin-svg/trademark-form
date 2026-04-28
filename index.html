@@ -230,7 +230,7 @@ input[type=radio], input[type=checkbox] { width:auto; }
   <label>台灣費用</label>
   <div class="fee-row">
     <div><label>價格（元/件）</label><input type="number" id="twPrice" value="7000" min="0" oninput="calcFees()"></div>
-    <div><label>數量（件）</label><input type="number" id="twQty" value="1" min="1" oninput="calcFees()"></div>
+    <div><label>數量（件）</label><input type="number" id="twQty" value="1" min="0" oninput="calcFees()"></div>
     <div><label>總價</label><div class="fee-total-box" id="twTotal">7,000</div></div>
   </div>
   <label style="margin-top:8px">外國費用</label>
@@ -510,8 +510,9 @@ function buildFeeTable(){
   while(table.rows.length>1) table.deleteRow(1);
 
   const twP=parseInt(g('twPrice').value)||0;
-  const twQ=parseInt(g('twQty').value)||1;
-  const twStr=`${twP.toLocaleString()} × ${twQ} 件 = ${(twP*twQ).toLocaleString()} 元`;
+  const twQ=parseInt(g('twQty').value);
+  const twQVal=isNaN(twQ)?0:twQ;
+  const twStr=twQVal===0?'無':`${twP.toLocaleString()} × ${twQVal} 件 = ${(twP*twQVal).toLocaleString()} 元`;
 
   const fItems=[...g('foreignBlock').querySelectorAll('.foreign-item')].map(row=>{
     const fp=parseInt(row.querySelector('.f-price').value)||0;
