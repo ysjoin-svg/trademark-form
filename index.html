@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>永旭智慧財產 — 商標文件產生器</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: '微軟正黑體', 'Microsoft JhengHei', sans-serif; background: #f5f5f5; color: #333; }
+
+  /* ── 頁首 ── */
+  header { background: #1a3a5c; color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 1.2rem; font-weight: 600; }
+
+  /* ── 主體佈局 ── */
+  .container { display: flex; gap: 0; min-height: calc(100vh - 56px); }
+
+  /* ── 左側表單 ── */
+  .form-panel { width: 380px; min-width: 340px; background: #fff; padding: 20px; overflow-y: auto; border-right: 1px solid #ddd; }
+  .section-title { font-size: 0.75rem; font-weight: 700; color: #1a3a5c; text-transform: uppercase; letter-spacing: 1px; margin: 18px 0 10px; border-bottom: 2px solid #1a3a5c; padding-bottom: 4px; }
+  .section-title:first-child { margin-top: 0; }
+  label { display: block; font-size: 0.82rem; color: #555; margin-bottom: 3px; margin-top: 10px; }
+  label:first-of-type { margin-top: 0; }
+  input[type=text], input[type=tel], select, textarea {
+    width: 100%; padding: 7px 10px; border: 1px solid #ccc; border-radius: 4px;
+    font-size: 0.88rem; font-family: inherit; transition: border-color .2s;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: #1a3a5c; }
+  textarea { resize: vertical; min-height: 60px; }
+
+  .radio-group, .checkbox-group { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 4px; }
+  .radio-group label, .checkbox-group label { display: flex; align-items: center; gap: 4px; font-size: 0.85rem; color: #333; margin: 0; cursor: pointer; }
+  input[type=radio], input[type=checkbox] { width: auto; }
+
+  .fee-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .fee-row input { flex: 1; }
+  .fee-row span { font-size: 0.82rem; white-space: nowrap; color: #555; }
+
+  .btn-generate {
+    width: 100%; margin-top: 20px; padding: 11px; background: #1a3a5c; color: #fff;
+    border: none; border-radius: 4px; font-size: 0.95rem; font-family: inherit;
+    cursor: pointer; font-weight: 600; transition: background .2s;
+  }
+  .btn-generate:hover { background: #254e7a; }
+
+  /* ── 右側預覽 ── */
+  .preview-panel { flex: 1; padding: 24px; overflow-y: auto; background: #e8e8e8; }
+  .tab-bar { display: flex; gap: 6px; margin-bottom: 16px; }
+  .tab { padding: 7px 20px; border-radius: 4px 4px 0 0; background: #ccc; cursor: pointer; font-size: 0.88rem; border: none; font-family: inherit; }
+  .tab.active { background: #fff; font-weight: 600; color: #1a3a5c; }
+  .print-btn {
+    margin-left: auto; padding: 7px 18px; background: #c0392b; color: #fff;
+    border: none; border-radius: 4px; font-size: 0.85rem; cursor: pointer; font-family: inherit;
+  }
+  .print-btn:hover { background: #a93226; }
+
+  .doc-sheet {
+    background: #fff; width: 210mm; min-height: 297mm; margin: 0 auto;
+    padding: 20mm 25mm; font-family: '新細明體', 'PMingLiU', serif;
+    font-size: 12pt; line-height: 1.8; box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  }
+  .hidden { display: none; }
+
+  /* ── 委任書樣式 ── */
+  .doc-title { text-align: center; font-size: 20pt; font-weight: bold; letter-spacing: 8px; margin-bottom: 24pt; }
+  .doc-body { text-indent: 2em; text-align: justify; margin-bottom: 20pt; }
+  .doc-field-table { width: 100%; border-collapse: collapse; margin-top: 16pt; }
+  .doc-field-table td { padding: 5pt 6pt; vertical-align: top; }
+  .doc-field-table .label-cell { white-space: nowrap; width: 80pt; letter-spacing: 4px; }
+  .doc-date { margin-top: 24pt; text-align: center; letter-spacing: 6px; }
+
+  /* ── 契約書樣式 ── */
+  .contract-title { text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 12pt; }
+  .contract-intro { margin-bottom: 10pt; }
+  .contract-article { margin-bottom: 10pt; }
+  .contract-article .article-title { font-weight: bold; }
+  .contract-item { text-indent: 2em; }
+  .contract-sub { text-indent: 4em; }
+  .fee-table { width: 100%; border-collapse: collapse; margin: 6pt 0; font-size: 11pt; }
+  .fee-table th, .fee-table td { border: 1px solid #333; padding: 4pt 6pt; text-align: center; }
+  .fee-table th { background: #f0f0f0; font-weight: bold; }
+  .sign-table { width: 100%; border-collapse: collapse; margin-top: 20pt; font-size: 11pt; }
+  .sign-table td { padding: 4pt 8pt; vertical-align: top; width: 50%; }
+  .sign-row { display: flex; gap: 4pt; }
+
+  @media print {
+    body { background: #fff; }
+    .form-panel, .tab-bar, header { display: none; }
+    .preview-panel { padding: 0; background: #fff; }
+    .doc-sheet { box-shadow: none; margin: 0; padding: 15mm 20mm; }
+    .hidden { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="6" fill="#fff" fill-opacity=".15"/><path d="M7 8h14M7 14h10M7 20h12" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+  <h1>永旭智慧財產事務所 — 商標文件產生器</h1>
+</header>
+
+<div class="container">
+
+  <!-- ════ 左側：輸入表單 ════ -->
+  <div class="form-panel">
+
+    <div class="section-title">基本設定</div>
+    <label>辦理所別</label>
+    <div class="radio-group">
+      <label><input type="radio" name="office" value="高雄" checked> 高雄所（李宗穎）</label>
+      <label><input type="radio" name="office" value="台北"> 台北所（林家均）</label>
+    </div>
+
+    <div class="section-title">委任人資料</div>
+    <label>委任人姓名 / 公司名稱</label>
+    <input type="text" id="clientName" placeholder="例：王大明 / 某某有限公司">
+    <label>代表人（公司才填）</label>
+    <input type="text" id="representative" placeholder="選填">
+    <label>統一編號（公司才填）</label>
+    <input type="text" id="taxId" placeholder="選填">
+    <label>聯絡地址</label>
+    <input type="text" id="address" placeholder="例：高雄市…">
+    <label>電話</label>
+    <input type="tel" id="phone" placeholder="例：0912-345678">
+    <label>行動電話</label>
+    <input type="tel" id="mobile" placeholder="選填">
+    <label>傳真</label>
+    <input type="tel" id="fax" placeholder="選填">
+
+    <div class="section-title">案件資料</div>
+    <label>案件名稱（商標名稱）</label>
+    <input type="text" id="caseName" placeholder="例：某某品牌">
+    <label>商標顏色</label>
+    <div class="radio-group">
+      <label><input type="radio" name="color" value="墨色" checked> 墨色</label>
+      <label><input type="radio" name="color" value="彩色"> 彩色</label>
+    </div>
+    <label>字體類型</label>
+    <div class="radio-group">
+      <label><input type="radio" name="fontType" value="標準字體" checked> 標準字體</label>
+      <label><input type="radio" name="fontType" value="設計字體"> 設計字體</label>
+    </div>
+    <label>類別（可填多個，用「、」分隔）</label>
+    <input type="text" id="categories" placeholder="例：35、42">
+    <label>商品或服務名稱（選填）</label>
+    <textarea id="goodsServices" placeholder="選填，如有需要可填入"></textarea>
+
+    <label>案件性質（可複選）</label>
+    <div class="checkbox-group">
+      <label><input type="checkbox" name="caseType" value="查名"> 查名</label>
+      <label><input type="checkbox" name="caseType" value="申請"> 申請</label>
+      <label><input type="checkbox" name="caseType" value="延展"> 延展</label>
+      <label><input type="checkbox" name="caseType" value="申復"> 申復</label>
+      <label><input type="checkbox" name="caseType" value="訴願"> 訴願</label>
+      <label><input type="checkbox" name="caseType" value="答辯"> 答辯</label>
+      <label><input type="checkbox" name="caseType" value="行政訴訟一審"> 行政訴訟一審</label>
+      <label><input type="checkbox" name="caseType" value="行政訴訟上訴審"> 行政訴訟上訴審</label>
+      <label><input type="checkbox" name="caseType" value="授權"> 授權</label>
+      <label><input type="checkbox" name="caseType" value="移轉"> 移轉</label>
+      <label><input type="checkbox" name="caseType" value="異議"> 異議</label>
+      <label><input type="checkbox" name="caseType" value="評定"> 評定</label>
+      <label><input type="checkbox" name="caseType" value="廢止"> 廢止</label>
+      <label><input type="checkbox" name="caseType" value="變更"> 變更</label>
+      <label><input type="checkbox" name="caseType" value="領證"> 領證</label>
+      <label><input type="checkbox" name="caseType" value="補證"> 補證</label>
+      <label><input type="checkbox" name="caseType" value="其他"> 其他</label>
+    </div>
+
+    <label style="margin-top:10px">申請人</label>
+    <div class="radio-group">
+      <label><input type="radio" name="applicant" value="same" checked> 同委任人</label>
+      <label><input type="radio" name="applicant" value="other"> 其他</label>
+    </div>
+    <div id="applicantOtherBlock" style="display:none; margin-top:6px">
+      <label>申請人姓名</label>
+      <input type="text" id="applicantName" placeholder="">
+      <label>申請地址</label>
+      <input type="text" id="applicantAddress" placeholder="">
+    </div>
+
+    <div class="section-title">費用</div>
+    <label>台灣費用明細</label>
+    <input type="text" id="twFeeDetail" placeholder="例：6000 × 4 件 = 24000">
+    <label>前酬金（中文大寫）</label>
+    <input type="text" id="feeText" placeholder="例：貳萬肆仟元整">
+    <label>其他國家費用（選填）</label>
+    <div id="foreignFees">
+      <div class="fee-row">
+        <input type="text" placeholder="國家" style="width:80px;flex:none">
+        <input type="text" placeholder="金額（新台幣）">
+      </div>
+    </div>
+    <button type="button" onclick="addForeignFee()" style="margin-top:6px;padding:4px 10px;font-size:0.8rem;cursor:pointer;border:1px solid #aaa;border-radius:3px;background:#f9f9f9">＋ 新增外國費用</button>
+
+    <div class="section-title">日期</div>
+    <div style="display:flex;gap:8px">
+      <div style="flex:1"><label>民國年</label><input type="text" id="year" placeholder="例：115"></div>
+      <div style="flex:1"><label>月</label><input type="text" id="month" placeholder="例：4"></div>
+      <div style="flex:1"><label>日</label><input type="text" id="day" placeholder="例：28"></div>
+    </div>
+
+    <button class="btn-generate" onclick="generate()">產生文件</button>
+  </div>
+
+  <!-- ════ 右側：預覽 ════ -->
+  <div class="preview-panel">
+    <div class="tab-bar">
+      <button class="tab active" onclick="showTab('poa')">委任書</button>
+      <button class="tab" onclick="showTab('contract')">契約書</button>
+      <button class="print-btn" onclick="printDoc()">列印 / 存PDF</button>
+    </div>
+
+    <!-- 委任書 -->
+    <div id="tab-poa" class="doc-sheet">
+      <div class="doc-title">委　任　書</div>
+      <div class="doc-body">
+        茲委任下列受任人為特別授權之商標代理人，得單獨或共同代理：向商標主管機關辦理有關商標／服務標章／團體標章／證明標章／團體標章之申請、撤回、補正、移轉、分割、設定質權、延展、授權、變更、讓與、減縮商品或服務、拋棄商標權、繳納註冊費、發補書證、查閱、影印、發給各種證明文件等及其他有關事項之必要行為，核駁理由先行通知之陳述意見，異議、評定、廢止之提出及各該程序之答辯，以及申請舉行與出席聽證，訴願、行政訴訟之提出及撤回，代收上述程序有關之一切書證或物件，並有收受送達、捨棄、認諾、撤回及選任／解任複代理人之權，辦理商標法及其他法令所定關於商標一切程序之權，及代為保障本件權益之一切行為之權，並得隨時向主管機關申請減列或解任部分代理人。
+      </div>
+      <table class="doc-field-table">
+        <tr>
+          <td class="label-cell">委　任　人：</td>
+          <td><span id="poa-clientName">＿＿＿＿＿＿＿＿</span>（簽章）</td>
+        </tr>
+        <tr id="poa-rep-row" style="display:none">
+          <td class="label-cell">代　表　人：</td>
+          <td><span id="poa-representative"></span></td>
+        </tr>
+        <tr>
+          <td class="label-cell">地　　　址：</td>
+          <td><span id="poa-address">＿＿＿＿＿＿＿＿＿＿＿＿</span></td>
+        </tr>
+        <tr>
+          <td class="label-cell">電　　　話：</td>
+          <td><span id="poa-phone">＿＿＿＿＿＿</span></td>
+        </tr>
+        <tr><td colspan="2" style="padding-top:10pt"></td></tr>
+        <tr>
+          <td class="label-cell">受　任　人：</td>
+          <td><span id="poa-agent">李宗穎</span></td>
+        </tr>
+        <tr>
+          <td class="label-cell">登錄字號：</td>
+          <td><span id="poa-regNo">TT000087</span></td>
+        </tr>
+        <tr>
+          <td class="label-cell">事　務　所：</td>
+          <td>永旭智慧財產事務所</td>
+        </tr>
+        <tr>
+          <td class="label-cell">高　雄　所：</td>
+          <td>高雄市左營區子華路116號2樓之3</td>
+        </tr>
+        <tr>
+          <td class="label-cell">台　北　所：</td>
+          <td>臺北市中正區莒光路47號1樓</td>
+        </tr>
+        <tr>
+          <td class="label-cell">電　　　話：</td>
+          <td>(07)345-3388（總機）</td>
+        </tr>
+      </table>
+      <div class="doc-date">
+        中　華　民　國　<span id="poa-year">　　　</span>　年　<span id="poa-month">　　</span>　月　<span id="poa-day">　　</span>　日
+      </div>
+    </div>
+
+    <!-- 契約書 -->
+    <div id="tab-contract" class="doc-sheet hidden">
+      <div class="contract-title">商標案件委任契約書</div>
+      <div class="contract-intro">委任人（甲方）茲委任受任人（乙方）辦理商標案件，雙方同意條件如下：</div>
+
+      <div class="contract-article">
+        <span class="article-title">第一條　委辦內容：</span>
+        <div class="contract-item">一、案件名稱：<span id="c-caseName">＿＿＿＿＿＿</span>　■<span id="c-color">墨色</span>　■<span id="c-font">標準字體</span></div>
+        <div class="contract-item">二、類別：第　<span id="c-categories">＿＿</span>　類　■商標　□團體標章　□團體商標　□證明標章</div>
+        <div class="contract-item">　　　商品或服務名稱：<span id="c-goods"></span></div>
+        <div class="contract-item">三、案件性質：<span id="c-caseType">＿＿＿＿</span></div>
+        <div class="contract-item">四、申　請　人：<span id="c-applicant">■同委任人</span></div>
+        <div id="c-applicant-detail-block" style="display:none">
+          <div class="contract-sub">代表人：<span id="c-appName"></span>　　申請地址：<span id="c-appAddr"></span></div>
+        </div>
+        <div class="contract-item">　　　統一編號：<span id="c-taxId"></span></div>
+      </div>
+
+      <div class="contract-article">
+        <span class="article-title">第二條　委辦費用：</span>
+        <div class="contract-item">一、乙方受委辦前條程序之費用（包括國外代理人費用），約定如下：</div>
+        <table class="fee-table" id="c-feeTable">
+          <tr><th>國　別</th><th>金額（新台幣）</th><th>國　別</th><th>金額（新台幣）</th></tr>
+          <tr><td>台灣</td><td id="c-twFee">＿＿＿＿</td><td></td><td></td></tr>
+        </table>
+        <div class="contract-item">二、前酬金新台幣<span id="c-feeText">＿＿＿＿＿＿＿＿</span>，於本契約簽訂同時由甲方一次付清，乙方於收到本費用後始有履行本契約之義務。</div>
+        <div class="contract-item">三、後酬金新台幣＿拾＿萬＿仟＿佰元整，於本程序終結時，由甲方一次付清。</div>
+        <div class="contract-item">四、本條所列之委辦費用僅為第一條第三款案件性質中勾選委辦之程序，其他未勾選程序如欲辦理，費用由甲方負擔，其金額依規費、本所服務費及外國代理人費用收取之。</div>
+        <div class="contract-item">五、本條所約定之費用如甲方未於所指定之期限內付清，則乙方無義務辦理所受任之事項，且經乙方限期催告後，如甲方仍不履行時，則本契約當然終止，乙方並得通知各外國代理人終止進行該程序及嗣後之一切程序。另乙方已先行代辦之服務費用，甲方仍應照付。</div>
+      </div>
+
+      <div class="contract-article">
+        <span class="article-title">第三條</span>　乙方對於甲方所委辦之案件內容，於辦理中應嚴守秘密不得外洩，並不得發生足以影響甲方權益之疏誤，否則應對甲方負損害賠償責任。但以不超過第二條第二款所載金額的三倍為限。
+      </div>
+      <div class="contract-article">
+        <span class="article-title">第四條</span>　甲方確保所交付予乙方之資料，均無虛偽情事，如因不實致生損害或法律責任時，概由甲方負責，與乙方無關。
+      </div>
+      <div class="contract-article">
+        <span class="article-title">第五條</span>　乙方於辦理過程中，應隨時將辦理經過如申請日、案號及其他重要函件，儘速通知或交付甲方。但甲方簽約後變更連絡處所，未即時通知乙方，因而聯絡不及致誤時限者，乙方不負責任。
+      </div>
+      <div class="contract-article">
+        <span class="article-title">第六條</span>　凡經乙方正式通知甲方之任何事項，如甲方未依限答覆致延誤時限者，乙方不負責任。經乙方通知甲方繳費而未依限繳納者，亦同。
+      </div>
+      <div class="contract-article">
+        <span class="article-title">第七條</span>　甲方如逕自撤回所委辦之程序，或未經乙方同意終止契約時，所約定之費用，仍應全數給付。
+      </div>
+      <div class="contract-article">
+        <span class="article-title">第八條</span>　本約一式二份，經甲方暨乙方之經手人簽字或蓋章後生效，但有增刪修改時，需甲乙雙方於更動處蓋章始生效力，並由雙方各執乙份為憑。
+      </div>
+      <div class="contract-article">
+        <span class="article-title">第九條</span>　雙方同意就合約內容發生訴訟時，以台灣高雄地方法院為第一審管轄法院。
+      </div>
+
+      <table class="sign-table">
+        <tr>
+          <td><strong>甲　方：</strong></td>
+          <td><strong>乙　方：</strong></td>
+        </tr>
+        <tr>
+          <td>委任人：<span id="c-clientName">＿＿＿＿＿＿</span></td>
+          <td>受任人：永旭智慧財產事務所</td>
+        </tr>
+        <tr>
+          <td>代表人：<span id="c-rep"></span></td>
+          <td>經手人：<span id="c-agent">李宗穎</span></td>
+        </tr>
+        <tr>
+          <td>統一編號：<span id="c-taxId2"></span></td>
+          <td>地　址：高雄市左營區子華路116號2樓之3</td>
+        </tr>
+        <tr>
+          <td>聯絡地址：<span id="c-address">＿＿＿＿＿＿＿＿</span></td>
+          <td>台北所：臺北市中正區莒光路47號1樓</td>
+        </tr>
+        <tr>
+          <td>行動電話：<span id="c-mobile"></span></td>
+          <td>電　話：(07)345-3388　傳　真：(07)345-2122</td>
+        </tr>
+        <tr>
+          <td>電　話：<span id="c-phone"></span>　傳　真：<span id="c-fax"></span></td>
+          <td></td>
+        </tr>
+      </table>
+      <div class="doc-date" style="margin-top:16pt">
+        中　華　民　國　<span id="c-year">　　　</span>　年　<span id="c-month">　　</span>　月　<span id="c-day">　　</span>　日
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const AGENTS = {
+  '高雄': { name: '李宗穎', regNo: 'TT000087' },
+  '台北': { name: '林家均', regNo: 'TT000347' }
+};
+
+function g(id) { return document.getElementById(id); }
+
+function getOffice() {
+  return document.querySelector('input[name=office]:checked').value;
+}
+
+function generate() {
+  const office = getOffice();
+  const agent = AGENTS[office];
+  const clientName = g('clientName').value || '＿＿＿＿＿＿';
+  const rep = g('representative').value;
+  const taxId = g('taxId').value;
+  const address = g('address').value || '＿＿＿＿＿＿＿＿＿＿';
+  const phone = g('phone').value || '＿＿＿＿＿＿';
+  const mobile = g('mobile').value;
+  const fax = g('fax').value;
+  const caseName = g('caseName').value || '＿＿＿＿＿＿';
+  const color = document.querySelector('input[name=color]:checked').value;
+  const fontType = document.querySelector('input[name=fontType]:checked').value;
+  const categories = g('categories').value || '＿＿';
+  const goodsServices = g('goodsServices').value;
+  const twFeeDetail = g('twFeeDetail').value || '＿＿＿＿';
+  const feeText = g('feeText').value || '＿＿＿＿＿＿＿＿';
+  const year = g('year').value || '　　　';
+  const month = g('month').value || '　　';
+  const day = g('day').value || '　　';
+
+  const caseTypes = [...document.querySelectorAll('input[name=caseType]:checked')].map(c => c.value);
+  const allTypes = ['查名','申請','延展','申復','訴願','答辯','行政訴訟一審','行政訴訟上訴審','授權','移轉','異議','評定','廢止','變更','領證','補證','其他'];
+  const caseTypeStr = allTypes.map(t => (caseTypes.includes(t) ? '■' : '□') + t).join('　');
+
+  const applicantSame = document.querySelector('input[name=applicant]:checked').value === 'same';
+  const appName = g('applicantName').value;
+  const appAddr = g('applicantAddress').value;
+
+  // ── 委任書 ──
+  g('poa-clientName').textContent = clientName;
+  g('poa-address').textContent = address;
+  g('poa-phone').textContent = phone;
+  g('poa-agent').textContent = agent.name;
+  g('poa-regNo').textContent = agent.regNo;
+  g('poa-year').textContent = year;
+  g('poa-month').textContent = month;
+  g('poa-day').textContent = day;
+  if (rep) {
+    g('poa-rep-row').style.display = '';
+    g('poa-representative').textContent = rep;
+  } else {
+    g('poa-rep-row').style.display = 'none';
+  }
+
+  // ── 契約書 ──
+  g('c-caseName').textContent = caseName;
+  g('c-color').textContent = color;
+  g('c-font').textContent = fontType;
+  g('c-categories').textContent = categories;
+  g('c-goods').textContent = goodsServices;
+  g('c-caseType').innerHTML = caseTypeStr;
+  g('c-taxId').textContent = taxId;
+  g('c-taxId2').textContent = taxId;
+  g('c-clientName').textContent = clientName;
+  g('c-rep').textContent = rep;
+  g('c-agent').textContent = agent.name;
+  g('c-address').textContent = address;
+  g('c-mobile').textContent = mobile;
+  g('c-phone').textContent = phone;
+  g('c-fax').textContent = fax;
+  g('c-twFee').textContent = twFeeDetail;
+  g('c-feeText').textContent = feeText;
+  g('c-year').textContent = year;
+  g('c-month').textContent = month;
+  g('c-day').textContent = day;
+
+  if (applicantSame) {
+    g('c-applicant').textContent = '■同委任人';
+    g('c-applicant-detail-block').style.display = 'none';
+  } else {
+    g('c-applicant').textContent = '□同委任人';
+    g('c-applicant-detail-block').style.display = '';
+    g('c-appName').textContent = appName;
+    g('c-appAddr').textContent = appAddr;
+  }
+}
+
+function showTab(tab) {
+  g('tab-poa').classList.toggle('hidden', tab !== 'poa');
+  g('tab-contract').classList.toggle('hidden', tab !== 'contract');
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'poa') || (i === 1 && tab === 'contract'));
+  });
+}
+
+function printDoc() {
+  window.print();
+}
+
+function addForeignFee() {
+  const row = document.createElement('div');
+  row.className = 'fee-row';
+  row.innerHTML = '<input type="text" placeholder="國家" style="width:80px;flex:none"><input type="text" placeholder="金額（新台幣）">';
+  g('foreignFees').appendChild(row);
+}
+
+document.querySelectorAll('input[name=applicant]').forEach(r => {
+  r.addEventListener('change', () => {
+    g('applicantOtherBlock').style.display = r.value === 'other' && r.checked ? '' : 'none';
+  });
+});
+
+// 頁面載入時先產生一次空白預覽
+generate();
+</script>
+</body>
+</html>
