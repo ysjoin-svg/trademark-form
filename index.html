@@ -433,6 +433,18 @@ function onOfficeChange(){
 }
 
 // ── 多位申請人 ──
+// ── URL 參數自動填入（從 IPOS 橋接工具帶入）──
+(function loadFromUrl(){
+  const p=new URLSearchParams(location.search);
+  if(!p.has('ipos_name')) return;
+  if(g('clientName')) g('clientName').value=p.get('ipos_name')||'';
+  if(g('representative')) g('representative').value=p.get('ipos_rep')||'';
+  if(g('idNo')) g('idNo').value=p.get('ipos_id')||'';
+  if(g('regAddr')){ g('regAddr').value=p.get('ipos_addr')||''; g('regAddr').dispatchEvent(new Event('input')); }
+  if(g('mobile')) g('mobile').value=p.get('ipos_mobile')||'';
+  if(g('phone')) g('phone').value=p.get('ipos_phone')||'';
+})();
+
 let appItemCount=1;
 
 function toggleAppIndividual(cb){
