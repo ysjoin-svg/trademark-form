@@ -72,36 +72,36 @@ input[type=radio], input[type=checkbox] { width:auto; }
 .poa-date { margin-top:22pt; text-align:center; letter-spacing:6px; }
 
 /* ── 契約書 ── */
-.ct { padding:13mm 15mm; font-size:10.5pt; line-height:1.62; }
+.ct { padding:13mm 15mm; font-size:10.5pt; line-height:1.7; }
 .ct-title { text-align:center; font-size:14pt; font-weight:bold; margin-bottom:7pt; }
 .ct-intro { margin-bottom:6pt; }
 .ct-art { margin-bottom:5pt; }
 .ct-art-title { font-weight:bold; }
+
+/* 編號條目：flex 讓子項目對齊內容欄 */
+.ct-num-item { display:flex; padding-left:2em; }
+.ct-num { flex:none; width:2em; }
+.ct-num-content { flex:1; }
+.ct-num-content > div { margin-bottom:1pt; }
+
+/* 長條文字（第二條第四五款等） */
 .ct-item { padding-left:2em; }
-.ct-sub { padding-left:3em; }
 .ct-fee-table { width:100%; border-collapse:collapse; margin:3pt 0; font-size:9.5pt; }
 .ct-fee-table th, .ct-fee-table td { border:1px solid #333; padding:2.5pt 5pt; text-align:center; }
 .ct-fee-table th { font-weight:bold; }
+
+/* 簽名區 */
 .sign-area { margin-top:10pt; }
 .sign-cols { display:grid; grid-template-columns:1fr 1fr; gap:2pt 14pt; font-size:10pt; }
 .sign-row { padding:1.5pt 0; }
 .ct-date { margin-top:9pt; text-align:center; letter-spacing:5px; }
 
-/* ── 列印 ── */
+/* ── 列印：與畫面一致，不縮小字體 ── */
 @media print {
   body, .preview-panel { background:#fff; }
   header, .form-panel, .tab-bar { display:none !important; }
   .preview-panel { padding:0; }
   .doc-wrap { box-shadow:none; margin:0; width:100%; }
-  .poa { padding:12mm 18mm; }
-  .ct { padding:0; font-size:9pt; line-height:1.45; }
-  .ct-title { font-size:11pt; margin-bottom:4pt; }
-  .ct-intro { margin-bottom:4pt; }
-  .ct-art { margin-bottom:3.5pt; }
-  .ct-fee-table { font-size:8.5pt; }
-  .sign-cols { font-size:8.5pt; }
-  .sign-area { margin-top:6pt; }
-  .ct-date { margin-top:5pt; font-size:9pt; }
   @page { margin:1cm; }
 }
 </style>
@@ -150,7 +150,7 @@ input[type=radio], input[type=checkbox] { width:auto; }
   <div class="section-title">案件資料</div>
   <label>案件名稱 <span class="req">＊</span>（可新增多件）</label>
   <div id="caseList">
-    <div class="case-item"><input type="text" placeholder="例：某某品牌"><button onclick="removeCase(this)" title="刪除">✕</button></div>
+    <div class="case-item"><input type="text" placeholder="例：某某品牌"><button onclick="removeCase(this)">✕</button></div>
   </div>
   <button class="add-btn" onclick="addCase()">＋ 新增案件</button>
 
@@ -199,7 +199,7 @@ input[type=radio], input[type=checkbox] { width:auto; }
     <input type="text" id="otherText" placeholder="請說明其他性質內容">
   </div>
 
-  <!-- ═══ 商標申請人（與委任人不同） ═══ -->
+  <!-- ═══ 申請人與委任人不同 ═══ -->
   <label class="toggle-label">
     <input type="checkbox" id="diffApp" onchange="toggleDiffApp()"> 商標申請人與委任人不同
   </label>
@@ -213,11 +213,7 @@ input[type=radio], input[type=checkbox] { width:auto; }
     <input type="text" id="appId" placeholder="必填">
     <label>申請地址 <span class="req">＊</span></label>
     <div class="hint">請填營業登記或身分證上的地址</div>
-    <input type="text" id="appRegAddr" placeholder="" oninput="onAppRegAddrInput()">
-    <label>聯絡地址</label>
-    <div class="hint">郵寄地址</div>
-    <label class="sync-label"><input type="checkbox" id="appContactSame" onchange="syncAppContact()"> 與申請地址相同</label>
-    <input type="text" id="appContactAddr" placeholder="">
+    <input type="text" id="appRegAddr" placeholder="">
   </div>
 
   <!-- ═══ 費用 ═══ -->
@@ -231,8 +227,8 @@ input[type=radio], input[type=checkbox] { width:auto; }
   <label style="margin-top:8px">外國費用</label>
   <div class="foreign-block" id="foreignBlock"></div>
   <button class="add-btn" onclick="addForeignFee()">＋ 新增外國費用</button>
-  <label style="margin-top:10px">前酬金（輸入數字）</label>
-  <input type="number" id="feeAmount" placeholder="例：24000" min="0" oninput="updateFeeHint()">
+  <label style="margin-top:10px">前酬金（自動加總，可修改）</label>
+  <input type="number" id="feeAmount" min="0" oninput="updateFeeHint()">
   <div class="fee-hint" id="feeHint"></div>
   <label>後酬金</label>
   <input type="text" id="backFee" value="無" placeholder="例：無 / 壹萬元整">
@@ -269,7 +265,7 @@ input[type=radio], input[type=checkbox] { width:auto; }
         <tr><td class="lbl">地　　　址：</td><td><span class="fill" id="p-addr">＿＿＿＿＿＿＿＿＿＿</span></td></tr>
         <tr><td colspan="2" style="height:10pt"></td></tr>
         <tr><td class="lbl">受　任　人：</td><td><span class="fill" id="p-agent">李宗穎</span></td></tr>
-        <tr><td class="lbl">登錄字號：</td><td><span class="fill" id="p-regno">TT000087</span></td></tr>
+        <tr><td class="lbl">登 錄 字 號：</td><td><span class="fill" id="p-regno">TT000087</span></td></tr>
         <tr><td class="lbl">事　務　所：</td><td>永旭智慧財產事務所</td></tr>
         <tr><td class="lbl">高　雄　所：</td><td>高雄市左營區子華路116號2樓之3</td></tr>
         <tr><td class="lbl">台　北　所：</td><td>臺北市中正區莒光路47號1樓</td></tr>
@@ -286,29 +282,73 @@ input[type=radio], input[type=checkbox] { width:auto; }
       <div class="ct-intro">委任人（甲方）茲委任受任人（乙方）辦理商標案件，雙方同意條件如下：</div>
 
       <div class="ct-art">
-        <span class="ct-art-title">第一條　委辦內容：</span>
-        <div class="ct-item">一、案件名稱：<span class="fill" id="c-caseName">＿＿＿＿＿＿</span></div>
-        <div class="ct-sub">商標顏色：<span class="fill" id="c-color">墨色</span>　　字體類型：<span class="fill" id="c-font">標準字體</span></div>
-        <div class="ct-item">二、類別：第　<span class="fill" id="c-cats">＿＿</span>　類　<span class="fill" id="c-markType">商標</span></div>
-        <div id="c-goods-row" class="ct-sub" style="display:none">商品或服務名稱：<span class="fill" id="c-goods"></span></div>
-        <div class="ct-item">三、案件性質：<span class="fill" id="c-types">＿＿＿＿</span></div>
-        <div class="ct-item">四、申　請　人：<span class="fill" id="c-appName">＿＿＿＿＿＿</span></div>
-        <div id="c-app-rep-row" class="ct-sub" style="display:none">代表人：<span class="fill" id="c-appRep"></span></div>
-        <div id="c-app-id-row" class="ct-sub" style="display:none">統一編號：<span class="fill" id="c-appId"></span></div>
-        <div class="ct-sub">申請地址：<span class="fill" id="c-appAddr">＿＿＿＿＿＿＿＿</span></div>
+        <div><span class="ct-art-title">第一條　委辦內容：</span></div>
+
+        <!-- 一、案件名稱 + 商標顏色（同一內容區塊對齊） -->
+        <div class="ct-num-item">
+          <span class="ct-num">一、</span>
+          <div class="ct-num-content">
+            <div>案件名稱：<span class="fill" id="c-caseName">＿＿＿＿＿＿</span></div>
+            <div>商標顏色：<span class="fill" id="c-color">墨色</span>　　字體類型：<span class="fill" id="c-font">標準字體</span></div>
+          </div>
+        </div>
+
+        <!-- 二、類別 + 商品服務名稱 -->
+        <div class="ct-num-item">
+          <span class="ct-num">二、</span>
+          <div class="ct-num-content">
+            <div>類別：第　<span class="fill" id="c-cats">＿＿</span>　類　<span class="fill" id="c-markType">商標</span></div>
+            <div id="c-goods-row" style="display:none">商品或服務名稱：<span class="fill" id="c-goods"></span></div>
+          </div>
+        </div>
+
+        <!-- 三、案件性質 -->
+        <div class="ct-num-item">
+          <span class="ct-num">三、</span>
+          <div class="ct-num-content">
+            <div>案件性質：<span class="fill" id="c-types">＿＿＿＿</span></div>
+          </div>
+        </div>
+
+        <!-- 四、申請人 + 代表人 + 統一編號 + 申請地址（同一內容區塊對齊） -->
+        <div class="ct-num-item">
+          <span class="ct-num">四、</span>
+          <div class="ct-num-content">
+            <div>申請人：<span class="fill" id="c-appName">＿＿＿＿＿＿</span></div>
+            <div id="c-app-rep-row" style="display:none">代表人：<span class="fill" id="c-appRep"></span></div>
+            <div id="c-app-id-row" style="display:none">統一編號：<span class="fill" id="c-appId"></span></div>
+            <div>申請地址：<span class="fill" id="c-appAddr">＿＿＿＿＿＿＿＿</span></div>
+          </div>
+        </div>
       </div>
 
       <div class="ct-art">
-        <span class="ct-art-title">第二條　委辦費用：</span>
-        <div class="ct-item">一、乙方受委辦前條程序之費用（包括國外代理人費用），約定如下：</div>
-        <table class="ct-fee-table" id="c-feeTable">
-          <tr><th>國　別</th><th>金額（新台幣）</th><th>國　別</th><th>金額（新台幣）</th></tr>
-          <tr><td>台　灣</td><td class="fill" id="c-twFee">＿＿＿＿</td><td id="c-f1n"></td><td class="fill" id="c-f1a"></td></tr>
-        </table>
-        <div class="ct-item">二、前酬金新台幣<span class="fill" id="c-feeText">＿＿＿＿＿＿＿＿</span>，於本契約簽訂同時由甲方一次付清，乙方於收到本費用後始有履行本契約之義務。</div>
-        <div class="ct-item">三、後酬金：<span class="fill" id="c-backFee">無</span>，於本程序終結時，由甲方一次付清。</div>
-        <div class="ct-item">四、本條所列之委辦費用僅為第一條第三款案件性質中勾選委辦之程序，其他未勾選程序如欲辦理，費用由甲方負擔，其金額依規費、本所服務費及外國代理人費用收取之。</div>
-        <div class="ct-item">五、本條所約定之費用如甲方未於所指定之期限內付清，則乙方無義務辦理所受任之事項，且經乙方限期催告後，如甲方仍不履行時，則本契約當然終止，乙方並得通知各外國代理人終止進行該程序及嗣後之一切程序。另乙方已先行代辦之服務費用，甲方仍應照付。</div>
+        <div><span class="ct-art-title">第二條　委辦費用：</span></div>
+        <div class="ct-num-item">
+          <span class="ct-num">一、</span>
+          <div class="ct-num-content">
+            <div>乙方受委辦前條程序之費用（包括國外代理人費用），約定如下：</div>
+            <table class="ct-fee-table" id="c-feeTable">
+              <tr><th>國別</th><th>金額（新台幣）</th><th>國別</th><th>金額（新台幣）</th></tr>
+            </table>
+          </div>
+        </div>
+        <div class="ct-num-item">
+          <span class="ct-num">二、</span>
+          <div class="ct-num-content">前酬金新台幣<span class="fill" id="c-feeText">＿＿＿＿＿＿＿＿</span>，於本契約簽訂同時由甲方一次付清，乙方於收到本費用後始有履行本契約之義務。</div>
+        </div>
+        <div class="ct-num-item">
+          <span class="ct-num">三、</span>
+          <div class="ct-num-content">後酬金：<span class="fill" id="c-backFee">無</span>，於本程序終結時，由甲方一次付清。</div>
+        </div>
+        <div class="ct-num-item">
+          <span class="ct-num">四、</span>
+          <div class="ct-num-content">本條所列之委辦費用僅為第一條第三款案件性質中勾選委辦之程序，其他未勾選程序如欲辦理，費用由甲方負擔，其金額依規費、本所服務費及外國代理人費用收取之。</div>
+        </div>
+        <div class="ct-num-item">
+          <span class="ct-num">五、</span>
+          <div class="ct-num-content">本條所約定之費用如甲方未於所指定之期限內付清，則乙方無義務辦理所受任之事項，且經乙方限期催告後，如甲方仍不履行時，則本契約當然終止，乙方並得通知各外國代理人終止進行該程序及嗣後之一切程序。另乙方已先行代辦之服務費用，甲方仍應照付。</div>
+        </div>
       </div>
 
       <div class="ct-art"><span class="ct-art-title">第三條</span>　乙方對於甲方所委辦之案件內容，於辦理中應嚴守秘密不得外洩，並不得發生足以影響甲方權益之疏誤，否則應對甲方負損害賠償責任。但以不超過第二條第二款所載金額的三倍為限。</div>
@@ -323,17 +363,23 @@ input[type=radio], input[type=checkbox] { width:auto; }
         <div class="sign-cols">
           <div class="sign-row"><strong>甲　方：</strong></div>
           <div class="sign-row"><strong>乙　方：</strong></div>
+
           <div class="sign-row">委任人：<span class="fill" id="c-name">＿＿＿＿＿＿</span></div>
           <div class="sign-row">受任人：永旭智慧財產事務所</div>
+
           <div class="sign-row">代表人：<span class="fill" id="c-rep"></span></div>
           <div class="sign-row">經手人：<span class="fill" id="c-handler">李宗穎</span></div>
+
           <div class="sign-row">統一編號：<span class="fill" id="c-id"></span></div>
-          <div class="sign-row">地　　址：高雄市左營區子華路116號2樓之3</div>
-          <div class="sign-row">申請地址：<span class="fill" id="c-regAddr">＿＿＿＿＿＿＿＿</span></div>
-          <div class="sign-row">台北所：臺北市中正區莒光路47號1樓</div>
+          <div class="sign-row">地址：高雄市左營區子華路116號2樓之3</div>
+
           <div class="sign-row">聯絡地址：<span class="fill" id="c-contactAddr">＿＿＿＿＿＿＿＿</span></div>
-          <div class="sign-row">電　　話：(07)345-3388　傳　真：(07)345-2122</div>
-          <div class="sign-row">行動電話：<span class="fill" id="c-mobile"></span>　電話：<span class="fill" id="c-phone"></span>　傳真：<span class="fill" id="c-fax"></span></div>
+          <div class="sign-row">台北所：臺北市中正區莒光路47號1樓</div>
+
+          <div class="sign-row">行動電話：<span class="fill" id="c-mobile"></span></div>
+          <div class="sign-row">電話：(07)345-3388　傳真：(07)345-2122</div>
+
+          <div class="sign-row">電話：<span class="fill" id="c-phone"></span>　傳真：<span class="fill" id="c-fax"></span></div>
           <div class="sign-row"></div>
         </div>
         <div class="ct-date">中　華　民　國　<span class="fill" id="c-year">　　　</span>　年　<span class="fill" id="c-month">　　</span>　月　<span class="fill" id="c-day">　　</span>　日</div>
@@ -364,7 +410,6 @@ function onOfficeChange(){
   g('handler').value=AGENTS[o].name;
 }
 
-// 申請地址同步→聯絡地址
 function onRegAddrInput(){
   if(g('contactSame').checked) g('contactAddr').value=g('regAddr').value;
 }
@@ -374,29 +419,17 @@ function syncContact(){
   if(same) g('contactAddr').value=g('regAddr').value;
 }
 
-// 申請人申請地址同步
-function onAppRegAddrInput(){
-  if(g('appContactSame').checked) g('appContactAddr').value=g('appRegAddr').value;
-}
-function syncAppContact(){
-  const same=g('appContactSame').checked;
-  g('appContactAddr').disabled=same;
-  if(same) g('appContactAddr').value=g('appRegAddr').value;
-}
-
 function toggleOther(){ g('otherBlock').style.display=g('cbOther').checked?'':'none'; }
 function toggleDiffApp(){ g('diffAppBlock').classList.toggle('hidden',!g('diffApp').checked); }
 
-// 多件案件名稱
 function addCase(){
   const div=document.createElement('div');
   div.className='case-item';
-  div.innerHTML='<input type="text" placeholder="例：某某品牌"><button onclick="removeCase(this)" title="刪除">✕</button>';
+  div.innerHTML='<input type="text" placeholder="例：某某品牌"><button onclick="removeCase(this)">✕</button>';
   g('caseList').appendChild(div);
 }
 function removeCase(btn){
-  const items=g('caseList').querySelectorAll('.case-item');
-  if(items.length>1) btn.closest('.case-item').remove();
+  if(g('caseList').querySelectorAll('.case-item').length>1) btn.closest('.case-item').remove();
 }
 
 // 數字→中文大寫
@@ -426,15 +459,25 @@ function updateFeeHint(){
   g('feeHint').textContent=v?'→ '+toCN(v):'';
 }
 
+// 計算費用並自動更新前酬金
 function calcFees(){
   const p=parseInt(g('twPrice').value)||0;
   const q=parseInt(g('twQty').value)||0;
-  g('twTotal').textContent=(p*q).toLocaleString();
+  const twT=p*q;
+  g('twTotal').textContent=twT.toLocaleString();
+
+  let grand=twT;
   g('foreignBlock').querySelectorAll('.foreign-item').forEach(row=>{
     const fp=parseInt(row.querySelector('.f-price').value)||0;
     const fq=parseInt(row.querySelector('.f-qty').value)||0;
-    row.querySelector('.f-total').textContent=(fp*fq).toLocaleString();
+    const ft=fp*fq;
+    row.querySelector('.f-total').textContent=ft.toLocaleString();
+    grand+=ft;
   });
+
+  // 自動帶入前酬金
+  g('feeAmount').value=grand||'';
+  updateFeeHint();
 }
 
 function addForeignFee(){
@@ -445,8 +488,40 @@ function addForeignFee(){
     <div><label>價格</label><input type="number" class="f-price" value="7000" min="0" oninput="calcFees()"></div>
     <div><label>數量</label><input type="number" class="f-qty" value="1" min="1" oninput="calcFees()"></div>
     <div><label>總價</label><div class="foreign-total-box f-total">7,000</div></div>
-    <div style="display:flex;align-items:flex-end;padding-bottom:2px"><button onclick="this.closest('.foreign-item').remove();calcFees()" style="border:1px solid #ccc;border-radius:3px;cursor:pointer;padding:4px 6px;background:#fff;font-size:.8rem">✕</button></div>`;
+    <div style="display:flex;align-items:flex-end;padding-bottom:2px">
+      <button onclick="this.closest('.foreign-item').remove();calcFees()" style="border:1px solid #ccc;border-radius:3px;cursor:pointer;padding:4px 6px;background:#fff;font-size:.8rem">✕</button>
+    </div>`;
   g('foreignBlock').appendChild(wrap);
+  calcFees();
+}
+
+// 動態建立費用表格（支援多筆外國費用）
+function buildFeeTable(){
+  const table=g('c-feeTable');
+  while(table.rows.length>1) table.deleteRow(1);
+
+  const twP=parseInt(g('twPrice').value)||0;
+  const twQ=parseInt(g('twQty').value)||1;
+  const twStr=`${twP.toLocaleString()} × ${twQ} 件 = ${(twP*twQ).toLocaleString()} 元`;
+
+  const fItems=[...g('foreignBlock').querySelectorAll('.foreign-item')].map(row=>{
+    const fp=parseInt(row.querySelector('.f-price').value)||0;
+    const fq=parseInt(row.querySelector('.f-qty').value)||1;
+    return {
+      name: row.querySelector('.f-country').value||'',
+      str: `${fp.toLocaleString()} × ${fq} 件 = ${(fp*fq).toLocaleString()} 元`
+    };
+  });
+
+  // 第一列：臺灣 + 第一筆外國（若有）
+  const r0=table.insertRow(-1);
+  r0.innerHTML=`<td>臺灣</td><td class="fill">${twStr}</td><td>${fItems[0]?.name||''}</td><td class="fill">${fItems[0]?.str||''}</td>`;
+
+  // 後續外國費用每兩筆一列
+  for(let i=1;i<fItems.length;i+=2){
+    const r=table.insertRow(-1);
+    r.innerHTML=`<td>${fItems[i].name}</td><td class="fill">${fItems[i].str}</td><td>${fItems[i+1]?.name||''}</td><td class="fill">${fItems[i+1]?.str||''}</td>`;
+  }
 }
 
 function generate(){
@@ -455,41 +530,36 @@ function generate(){
   const handler=g('handler').value||agent.name;
 
   // 委任人資料
-  const cName     = g('clientName').value||'＿＿＿＿＿＿';
-  const cRep      = g('representative').value;
-  const cId       = g('idNo').value;
-  const cRegAddr  = g('regAddr').value||'＿＿＿＿＿＿＿＿';
-  const cContact  = g('contactAddr').value||cRegAddr;
-  const mobile    = g('mobile').value;
-  const phone     = g('phone').value;
-  const fax       = g('fax').value;
+  const cName    = g('clientName').value||'＿＿＿＿＿＿';
+  const cRep     = g('representative').value;
+  const cId      = g('idNo').value;
+  const cReg     = g('regAddr').value||'＿＿＿＿＿＿＿＿';
+  const cContact = g('contactAddr').value||cReg;
+  const mobile   = g('mobile').value;
+  const phone    = g('phone').value;
+  const fax      = g('fax').value;
 
-  // 商標申請人（預設同委任人）
-  const diff      = g('diffApp').checked;
-  const poaName   = diff?(g('appName').value||'＿＿＿＿'):cName;
-  const poaRep    = diff?g('appRep').value:cRep;
-  const poaAddr   = diff?(g('appRegAddr').value||'＿＿＿＿'):cRegAddr;
-  const appId     = diff?g('appId').value:cId;
-  const appContactAddr = diff?(g('appContactAddr').value||poaAddr):cContact;
+  // 申請人（委任書委任人欄位使用此資料）
+  const diff    = g('diffApp').checked;
+  const poaName = diff?(g('appName').value||'＿＿＿＿'):cName;
+  const poaRep  = diff?g('appRep').value:cRep;
+  const poaAddr = diff?(g('appRegAddr').value||'＿＿＿＿'):cReg;
+  const appId   = diff?g('appId').value:cId;
 
   // 案件名稱（多件）
   const cases=[...g('caseList').querySelectorAll('input')].map(i=>i.value.trim()).filter(v=>v);
   const caseStr=cases.length?cases.join('、'):'＿＿＿＿';
 
-  const markType = document.querySelector('input[name=markType]:checked').value;
-  const color    = document.querySelector('input[name=color]:checked').value;
-  const fontType = document.querySelector('input[name=fontType]:checked').value;
-  const cats     = g('categories').value||'＿＿';
-  const goods    = g('goodsServices').value;
+  const markType=document.querySelector('input[name=markType]:checked').value;
+  const color   =document.querySelector('input[name=color]:checked').value;
+  const fontType=document.querySelector('input[name=fontType]:checked').value;
+  const cats    =g('categories').value||'＿＿';
+  const goods   =g('goodsServices').value;
 
-  const otherVal = g('otherText').value;
+  const otherVal=g('otherText').value;
   const types=[...document.querySelectorAll('input[name=caseType]:checked')]
     .map(c=>c.value==='其他'&&otherVal?`其他（${otherVal}）`:c.value);
   const typesStr=types.length?types.join('、'):'＿＿＿＿';
-
-  const twP=parseInt(g('twPrice').value)||0;
-  const twQ=parseInt(g('twQty').value)||1;
-  const twFeeStr=`${twP.toLocaleString()} × ${twQ} 件 = ${(twP*twQ).toLocaleString()} 元`;
 
   const feeAmt=g('feeAmount').value;
   const feeCN=feeAmt?toCN(feeAmt):'＿＿＿＿＿＿＿＿';
@@ -498,14 +568,14 @@ function generate(){
   const mo=g('month').value||'　';
   const dy=g('day').value||'　';
 
-  // ── 委任書：使用申請人資料 ──
+  // ── 委任書（使用申請人資料） ──
   sf('p-name', poaName);
   sf('p-addr', poaAddr);
   sf('p-agent', agent.name);
   sf('p-regno', agent.regNo);
   sf('p-year',yr); sf('p-month',mo); sf('p-day',dy);
   if(poaRep){ g('p-rep-row').style.display=''; sf('p-rep',poaRep); }
-  else { g('p-rep-row').style.display='none'; }
+  else g('p-rep-row').style.display='none';
 
   // ── 契約書 ──
   sf('c-caseName', caseStr);
@@ -517,7 +587,6 @@ function generate(){
   g('c-goods-row').style.display=goods?'':'none';
   sf('c-types', typesStr);
 
-  // 申請人（契約書第一條）= 商標申請人（diff or 委任人）
   sf('c-appName', poaName);
   sf('c-appRep',  poaRep);
   sf('c-appId',   appId);
@@ -525,25 +594,16 @@ function generate(){
   g('c-app-rep-row').style.display=poaRep?'':'none';
   g('c-app-id-row').style.display=appId?'':'none';
 
-  sf('c-twFee', twFeeStr);
+  buildFeeTable();
+
   sf('c-feeText', feeCN);
   sf('c-backFee', backFee);
 
-  // 外國費用
-  const fRows=g('foreignBlock').querySelectorAll('.foreign-item');
-  if(fRows.length>0){
-    const fp=parseInt(fRows[0].querySelector('.f-price').value)||0;
-    const fq=parseInt(fRows[0].querySelector('.f-qty').value)||1;
-    sf('c-f1n', fRows[0].querySelector('.f-country').value||'');
-    sf('c-f1a', `${fp.toLocaleString()} × ${fq} 件 = ${(fp*fq).toLocaleString()} 元`);
-  } else { sf('c-f1n',''); sf('c-f1a',''); }
-
-  // 契約書甲方（委任人資料）
+  // 甲方（委任人資料）
   sf('c-name', cName);
   sf('c-rep', cRep);
   sf('c-handler', handler);
   sf('c-id', cId);
-  sf('c-regAddr', cRegAddr);
   sf('c-contactAddr', cContact);
   sf('c-mobile', mobile);
   sf('c-phone', phone);
